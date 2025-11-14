@@ -1,0 +1,54 @@
+CATEGORY FILTERING FIX VERIFICATION
+====================================
+
+BEFORE THE FIX:
+---------------
+❌ SearchFilters fetched from: /api/home/categories (doesn't exist)
+❌ Category mapping was incorrect:
+   - Frontend sent: "entertainment", "education", etc.
+   - API expected: "Dance", "Comedy", etc. (wrong categories)
+   - Database had: "Art & Design", "Education", etc.
+❌ Result: No videos found for any category
+
+AFTER THE FIX:
+--------------
+✅ SearchFilters fetches from: /api/categories (correct endpoint)
+✅ Category mapping is correct:
+   - Frontend sends: "art-design", "education", "entertainment", etc.
+   - API maps to: "Art & Design", "Education", "Entertainment", etc.
+   - Database has: "Art & Design", "Education", "Entertainment", etc.
+✅ Result: Videos are correctly filtered by category
+
+CATEGORY MAPPINGS:
+------------------
+Slug (Frontend)     →  Name (Database)
+-------------------    ------------------
+art-design          →  Art & Design
+education           →  Education
+entertainment       →  Entertainment
+technology          →  Technology
+lifestyle           →  Lifestyle
+music               →  Music
+gaming              →  Gaming
+fitness-health      →  Fitness & Health
+business            →  Business
+comedy              →  Comedy
+
+HOW TO TEST:
+------------
+1. Run: npm run dev
+2. Sign in to the app
+3. Go to: http://localhost:3000/discover
+4. Click on any category pill (e.g., "Education", "Entertainment")
+5. Videos should now appear for that category
+6. Open browser console to see logs:
+   - "Filtering by category: education -> Education"
+   - "Discover API - Query results: { totalCount: X, ... }"
+
+WHAT TO LOOK FOR:
+-----------------
+✅ Category pills load correctly (not showing "Loading...")
+✅ Clicking a category shows videos (not "No videos found")
+✅ Console logs show correct category mapping
+✅ Video count updates when switching categories
+✅ "All Categories" button shows all videos

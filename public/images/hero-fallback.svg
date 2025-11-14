@@ -1,0 +1,35 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="heroGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#01164D;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#85125E;stop-opacity:0.9" />
+      <stop offset="70%" style="stop-color:#D9208F;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#01164D;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="glow1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#CCE53F;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#CCE53F;stop-opacity:0" />
+    </radialGradient>
+    <radialGradient id="glow2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#00BA9C;stop-opacity:0.25" />
+      <stop offset="100%" style="stop-color:#00BA9C;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#heroGradient)"/>
+  
+  <!-- Animated background elements -->
+  <circle cx="300" cy="200" r="150" fill="url(#glow1)"/>
+  <circle cx="1600" cy="300" r="120" fill="url(#glow2)"/>
+  <circle cx="200" cy="800" r="100" fill="#D9208F" opacity="0.1"/>
+  <circle cx="1700" cy="900" r="80" fill="#CCE53F" opacity="0.08"/>
+  <circle cx="960" cy="100" r="60" fill="#00BA9C" opacity="0.12"/>
+  <circle cx="1400" cy="700" r="90" fill="#62CF6F" opacity="0.1"/>
+  
+  <!-- Subtle pattern overlay -->
+  <defs>
+    <pattern id="dots" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+      <circle cx="50" cy="50" r="1" fill="#FFFFFF" opacity="0.05"/>
+    </pattern>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#dots)"/>
+</svg>

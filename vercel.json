@@ -1,0 +1,14 @@
+{
+  "functions": {
+    "src/app/api/videos/upload/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/videos/upload-url/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/videos/save/route.ts": {
+      "maxDuration": 60
+    }
+  },
+  "regions": ["iad1"]
+}
