@@ -145,7 +145,7 @@ export default function WalletBalance({
  animate={{ scale: 1, color: '#111827' }}
  transition={{ duration: 0.3 }}
  >
- {balance.balance.toLocaleString()} credits
+ {balance.balance.toLocaleString()} coins
  </motion.div>
  
  <p className="text-gray-500 text-xs mt-1">

@@ -87,7 +87,7 @@ const rewardTasks: RewardTask[] = [
  {
  id: 'first-purchase',
  title: 'First Purchase',
- description: 'Make your first credit purchase',
+ description: 'Make your first coin purchase',
  reward: 25,
  type: 'achievement',
  icon: GiftIcon,
@@ -175,7 +175,7 @@ export default function RewardCoins() {
  </div>
  <div>
  <h2 className="text-2xl font-bold">Reward Center</h2>
- <p className="text-purple-100">Complete tasks to earn bonus credits</p>
+ <p className="text-purple-100">Complete tasks to earn bonus coins</p>
  </div>
  </div>
 
@@ -280,7 +280,7 @@ export default function RewardCoins() {
  <ul className="text-sm text-green-700 space-y-1">
  <li>• Share your unique referral code with friends</li>
  <li>• They sign up and make their first purchase</li>
- <li>• You both get 100 bonus credits!</li>
+ <li>• You both get 100 bonus coins!</li>
  </ul>
  <div className="mt-3">
  <div className="flex items-center gap-2">
@@ -342,7 +342,7 @@ export default function RewardCoins() {
 
  <div className="flex items-center justify-between mb-6">
  <span className="text-gray-600">Reward</span>
- <span className="text-lg font-semibold text-purple-600">+{selectedTask.reward} credits</span>
+ <span className="text-lg font-semibold text-purple-600">+{selectedTask.reward} coins</span>
  </div>
 
  <div className="flex gap-3">
@@ -416,7 +416,7 @@ function TaskCard({ task, onClaim, onSelect, isClaimingReward }: TaskCardProps) 
  
  <div className="text-right">
  <div className="text-lg font-semibold text-purple-600">+{task.reward}</div>
- <div className="text-xs text-gray-500">credits</div>
+ <div className="text-xs text-gray-500">coins</div>
  </div>
  </div>
 

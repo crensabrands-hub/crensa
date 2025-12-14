@@ -22,14 +22,14 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
  title: "Crensa - Monetize Your Short Videos",
  description:
- "Join Crensa to upload short video content and monetize it through our pay-per-view credit system.",
+ "Join Crensa to upload short video content and monetize it through our pay-per-view coin system.",
  keywords: "video monetization, short videos, content creators, pay-per-view",
  authors: [{ name: "Crensa Team" }],
  robots: "index, follow",
  openGraph: {
  title: "Crensa - Monetize Your Short Videos",
  description:
- "Join Crensa to upload short video content and monetize it through our pay-per-view credit system.",
+ "Join Crensa to upload short video content and monetize it through our pay-per-view coin system.",
  type: "website",
  locale: "en_US",
  },
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
  card: "summary_large_image",
  title: "Crensa - Monetize Your Short Videos",
  description:
- "Join Crensa to upload short video content and monetize it through our pay-per-view credit system.",
+ "Join Crensa to upload short video content and monetize it through our pay-per-view coin system.",
  },
 };
 

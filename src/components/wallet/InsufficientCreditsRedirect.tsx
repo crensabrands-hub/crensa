@@ -80,7 +80,7 @@ export default function InsufficientCreditsRedirect({
  animate={{ opacity: 1, y: 0 }}
  transition={{ delay: 0.3 }}
  >
- Insufficient Credits
+ Insufficient Coins
  </motion.h1>
 
  {}
@@ -95,7 +95,7 @@ export default function InsufficientCreditsRedirect({
  To watch &quot;{videoTitle}&quot;
  </p>
  )}
- <p>You need more credits to continue.</p>
+ <p>You need more coins to continue.</p>
  </motion.div>
 
  {}
@@ -110,7 +110,7 @@ export default function InsufficientCreditsRedirect({
  <div className="flex items-center gap-1">
  <CurrencyDollarIcon className="w-4 h-4 text-purple-600" />
  <span className="font-semibold text-gray-900">
- {error.required} credits
+ {error.required} coins
  </span>
  </div>
  </div>
@@ -120,7 +120,7 @@ export default function InsufficientCreditsRedirect({
  <div className="flex items-center gap-1">
  <CurrencyDollarIcon className="w-4 h-4 text-gray-400" />
  <span className="font-semibold text-gray-900">
- {error.available} credits
+ {error.available} coins
  </span>
  </div>
  </div>
@@ -131,7 +131,7 @@ export default function InsufficientCreditsRedirect({
  <div className="flex items-center gap-1">
  <CurrencyDollarIcon className="w-4 h-4 text-red-500" />
  <span className="font-bold text-red-600">
- {error.shortfall} more credits
+ {error.shortfall} more coins
  </span>
  </div>
  </div>

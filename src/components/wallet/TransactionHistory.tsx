@@ -39,7 +39,7 @@ interface TransactionFilters {
 
 const transactionTypes = [
  { value: 'all', label: 'All Transactions' },
- { value: 'credit_purchase', label: 'Credit Purchases' },
+ { value: 'credit_purchase', label: 'Coin Purchases' },
  { value: 'video_view', label: 'Video Views' }
 ]
 
@@ -195,7 +195,7 @@ export default function TransactionHistory() {
  const formatTransactionDescription = (transaction: Transaction) => {
  switch (transaction.type) {
  case 'credit_purchase':
- return 'Credit Purchase'
+ return 'Coin Purchase'
  case 'video_view':
  return transaction.video?.title ? `Watched: ${transaction.video.title}` : 'Video View'
  default:
@@ -406,7 +406,7 @@ export default function TransactionHistory() {
  <div className={`font-semibold ${
  transaction.type === 'credit_purchase' ? 'text-green-600' : 'text-red-600'
  }`}>
- {transaction.type === 'credit_purchase' ? '+' : '-'}{transaction.amount} credits
+ {transaction.type === 'credit_purchase' ? '+' : '-'}{transaction.amount} coins
  </div>
  {transaction.razorpayPaymentId && (
  <p className="text-xs text-gray-500 mt-1">

@@ -147,8 +147,8 @@ export default function TopUpInterface() {
  <CheckIcon className="w-8 h-8 text-green-600" />
  </div>
  <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h2>
- <p className="text-gray-600 mb-4">
- {paymentDetails.credits} credits have been added to your wallet
+ <p className="text-gray-600">
+ {paymentDetails.credits} coins have been added to your wallet
  </p>
  <div className="text-sm text-gray-500">
  Redirecting you back to wallet overview...
@@ -159,15 +159,15 @@ export default function TopUpInterface() {
 
  return (
  <div className="space-y-8">
- {}
+ {/* Header */}
  <div className="bg-white rounded-xl border border-gray-200 p-6">
- <h2 className="text-2xl font-bold text-gray-900 mb-2">Add Credits to Your Wallet</h2>
+ <h2 className="text-2xl font-bold text-gray-900 mb-2">Add Coins to Your Wallet</h2>
  <p className="text-gray-600">
  Choose from our popular packages or enter a custom amount. All payments are secure and processed instantly.
  </p>
  </div>
 
- {}
+ {/* Top-up Options */}
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
  {topUpOptions.map((option) => (
  <motion.div
@@ -181,7 +181,7 @@ export default function TopUpInterface() {
  whileHover={{ scale: 1.02 }}
  whileTap={{ scale: 0.98 }}
  >
- {}
+ {/* Popular Tag */}
  {option.popular && (
  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
  <span className="bg-purple-600 text-white text-xs font-medium px-3 py-1 rounded-full">
@@ -190,7 +190,7 @@ export default function TopUpInterface() {
  </div>
  )}
 
- {}
+ {/* Savings Tag */}
  {option.savings && (
  <div className="absolute -top-2 -right-2">
  <span className="bg-green-500 text-white text-xs font-medium px-2 py-1 rounded-full">
@@ -203,7 +203,7 @@ export default function TopUpInterface() {
  <div className="text-3xl font-bold text-gray-900 mb-1">
  {option.credits.toLocaleString()}
  </div>
- <div className="text-sm text-gray-600 mb-2">Credits</div>
+ <div className="text-sm text-gray-600 mb-2">Coins</div>
  
  {option.bonus && option.bonus > 0 && (
  <div className="flex items-center justify-center gap-1 mb-3">
@@ -219,11 +219,11 @@ export default function TopUpInterface() {
  </div>
  
  <div className="text-xs text-gray-500 mt-1">
- ₹{(option.amount / (option.credits + (option.bonus || 0))).toFixed(2)} per credit
+ ₹{(option.amount / (option.credits + (option.bonus || 0))).toFixed(2)} per coin
  </div>
  </div>
 
- {}
+ {/* Selected Checkmark */}
  <AnimatePresence>
  {selectedOption?.id === option.id && (
  <motion.div
@@ -242,7 +242,7 @@ export default function TopUpInterface() {
  ))}
  </div>
 
- {}
+ {/* Custom Amount */}
  <div className="bg-white rounded-xl border border-gray-200 p-6">
  <div className="flex items-center gap-3 mb-4">
  <input
@@ -287,13 +287,13 @@ export default function TopUpInterface() {
 
  <div>
  <label className="block text-sm font-medium text-gray-700 mb-2">
- Credits You&apos;ll Get
+ Coins You&apos;ll Get
  </label>
  <div className="py-3 px-4 bg-gray-50 border border-gray-200 rounded-lg">
  <div className="text-lg font-semibold text-gray-900">
- {customCredits ? Number(customCredits).toLocaleString() : '0'} credits
+ {customCredits ? Number(customCredits).toLocaleString() : '0'} coins
  </div>
- <div className="text-xs text-gray-500">1 credit = ₹1</div>
+ <div className="text-xs text-gray-500">1 coin = ₹1</div>
  </div>
  </div>
  </motion.div>
@@ -301,14 +301,14 @@ export default function TopUpInterface() {
  </AnimatePresence>
  </div>
 
- {}
+ {/* Payment Summary & Button */}
  <div className="bg-white rounded-xl border border-gray-200 p-6">
  <div className="flex items-center justify-between mb-4">
  <div>
  <h3 className="text-lg font-medium text-gray-900">Payment Summary</h3>
  {(selectedOption || (isCustom && customAmount)) && (
  <div className="text-sm text-gray-600 mt-1">
- {paymentDetails.credits.toLocaleString()} credits for ₹{paymentDetails.amount}
+ {paymentDetails.credits.toLocaleString()} coins for ₹{paymentDetails.amount}
  </div>
  )}
  </div>
@@ -324,11 +324,11 @@ export default function TopUpInterface() {
  </div>
 
  <div className="text-xs text-gray-500">
- Payments are processed securely by Razorpay. Credits will be added to your wallet instantly after successful payment.
+ Payments are processed securely by Razorpay. Coins will be added to your wallet instantly after successful payment.
  </div>
  </div>
 
- {}
+ {/* Payment Modal */}
  {showPaymentModal && userProfile && (
  <PaymentModal
  isOpen={showPaymentModal}

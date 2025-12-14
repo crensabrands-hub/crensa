@@ -46,7 +46,7 @@ function WalletPage() {
  <div className="mb-8">
  <h1 className="text-3xl font-bold text-gray-900 mb-2">Wallet</h1>
  <p className="text-gray-600">
- Manage your credits, view transaction history, and earn rewards
+ Manage your coins, view transaction history, and earn rewards
  </p>
  </div>
 
@@ -99,7 +99,7 @@ function WalletPage() {
  className="p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors text-left"
  >
  <ArrowUpIcon className="w-6 h-6 text-purple-600 mb-2" />
- <h3 className="font-medium text-gray-900">Add Credits</h3>
+ <h3 className="font-medium text-gray-900">Add Coins</h3>
  <p className="text-sm text-gray-600">Top up your wallet balance</p>
  </button>
  
@@ -118,7 +118,7 @@ function WalletPage() {
  >
  <GiftIcon className="w-6 h-6 text-purple-600 mb-2" />
  <h3 className="font-medium text-gray-900">Earn Rewards</h3>
- <p className="text-sm text-gray-600">Get bonus credits</p>
+ <p className="text-sm text-gray-600">Get bonus coins</p>
  </button>
  
  <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
