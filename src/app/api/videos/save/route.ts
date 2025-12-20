@@ -53,10 +53,12 @@ export async function POST(request: NextRequest) {
  }
 
  const coinPrice = metadata.coinPrice ?? (metadata.creditCost ? metadata.creditCost * 20 : 20)
+ const isFree = metadata.isFree === true
  
  console.log('=== BACKEND SAVE DEBUG ===')
  console.log('Received metadata:', metadata)
  console.log('Calculated coinPrice:', coinPrice)
+ console.log('isFree:', isFree)
  console.log('Has seriesId?', !!metadata.seriesId)
  console.log('SeriesId value:', metadata.seriesId)
  console.log('========================')
@@ -79,15 +81,17 @@ export async function POST(request: NextRequest) {
  )
  }
 
- if (coinPrice !== 0) {
+ // For series videos: either isFree=true OR coinPrice must be 0
+ if (!isFree && coinPrice !== 0) {
  return NextResponse.json(
- { error: 'Videos in a series cannot have individual prices. The coin price must be 0.' },
+ { error: 'Videos in a series cannot have individual prices. The coin price must be 0 unless the video is marked as free.' },
  { status: 400 }
  )
  }
  } else {
 
- if (coinPrice < 1 || coinPrice > 2000) {
+ // For standalone videos: validate pricing only if not free
+ if (!isFree && (coinPrice < 1 || coinPrice > 2000)) {
  return NextResponse.json(
  { error: 'Standalone video price must be between 1 and 2000 coins' },
  { status: 400 }
@@ -144,12 +148,13 @@ export async function POST(request: NextRequest) {
  thumbnailUrl,
  duration: Math.round(cloudinaryResult.duration || 0),
  creditCost: (coinPrice / 20).toFixed(2), // Legacy field: convert coins to rupees
- coinPrice: coinPrice,
+ coinPrice: isFree ? 0 : coinPrice,
  category: metadata.category,
  tags: metadata.tags || [],
  viewCount: 0,
  totalEarnings: '0.00',
  isActive: true,
+ isFree: isFree,
  aspectRatio: metadata.aspectRatio || '16:9',
  seriesId: metadata.seriesId || null
  })

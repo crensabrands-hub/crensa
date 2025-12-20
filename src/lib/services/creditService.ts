@@ -73,6 +73,36 @@ export class CreditService {
  }
  }
 
+      // Check if video is free - skip payment but still track view
+      if (video.isFree) {
+        // Create a $0 view transaction for analytics tracking
+        const viewTransaction = await transactionRepository.createVideoView(
+          userId,
+          videoId,
+          video.creatorId,
+          0 // Free - no cost
+        )
+
+        // Still increment view count for free videos
+        await videoRepository.incrementViewCount(videoId)
+
+        // Update creator profile view count (no earnings for free videos)
+        const creatorProfile = await userRepository.findById(video.creatorId)
+        if (creatorProfile?.creatorProfile) {
+          await userRepository.updateCreatorProfile(video.creatorId, {
+            totalViews: creatorProfile.creatorProfile.totalViews + 1
+          })
+        }
+
+        const newBalance = await transactionRepository.getUserWalletBalance(userId)
+
+        return {
+          success: true,
+          newBalance,
+          transactionId: viewTransaction.id
+        }
+      }
+
  const creditsCost = parseFloat(video.creditCost.toString())
 
  const creditCheck = await this.checkSufficientCredits(userId, creditsCost)

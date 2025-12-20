@@ -110,13 +110,22 @@ export class SeriesAccessService {
  columns: {
  id: true,
  seriesId: true,
- creatorId: true
+ creatorId: true,
+ isFree: true // Include isFree flag
  }
  });
 
  if (!video) {
  console.error('[SeriesAccess] Video not found:', videoId);
  return { hasAccess: false };
+ }
+
+ // Free videos are accessible to everyone
+ if (video.isFree) {
+ return {
+ hasAccess: true,
+ accessType: 'video_purchase' // Use existing type for compatibility
+ };
  }
 
  if (video.creatorId === userId) {

@@ -178,6 +178,7 @@ export const videos = pgTable(
  aspectRatio: varchar("aspect_ratio", { length: 10 }).default("16:9").notNull()
  .$type<"1:1" | "16:9" | "9:16" | "2:3" | "3:2" | "4:5" | "5:4">(),
  seriesId: uuid("series_id").references(() => series.id, { onDelete: "set null" }),
+ isFree: boolean("is_free").default(false).notNull(), // Free video flag - allows watching without payment
  createdAt: timestamp("created_at").defaultNow().notNull(),
  updatedAt: timestamp("updated_at").defaultNow().notNull(),
  },
@@ -190,6 +191,7 @@ export const videos = pgTable(
  aspectRatioIdx: index("videos_aspect_ratio_idx").on(table.aspectRatio),
  seriesIdIdx: index("videos_series_id_idx").on(table.seriesId),
  coinPriceIdx: index("videos_coin_price_idx").on(table.coinPrice),
+ isFreeIdx: index("videos_is_free_idx").on(table.isFree),
  })
 );
 

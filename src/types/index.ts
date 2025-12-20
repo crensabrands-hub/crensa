@@ -230,6 +230,7 @@ export interface Video {
  viewCount: number;
  totalEarnings: number;
  isActive: boolean;
+ isFree: boolean; // Free video flag - allows watching without payment
  aspectRatio: AspectRatio;
  seriesId?: string;
  createdAt: Date;
@@ -266,6 +267,7 @@ export interface VideoMetadata {
  coinPrice: number; // New coin-based pricing (1-2000 coins)
  aspectRatio: AspectRatio;
  seriesId?: string;
+ isFree?: boolean; // Free video flag - allows watching without payment
 }
 
 export interface CloudinaryUploadResponse {
