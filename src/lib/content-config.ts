@@ -67,11 +67,11 @@ export function getEnvironmentUrls() {
  console.error('Failed to get environment URLs:', error)
 
  return {
- creatorSignup: '/sign-up?role=creator',
- memberSignup: '/sign-up?role=member',
+ creatorSignup: '/creator-signup',
+ memberSignup: '/sign-up',
  creatorSignin: '/sign-in?role=creator',
  memberSignin: '/sign-in?role=member',
- earlyAccess: '/sign-up?role=member',
+ earlyAccess: '/sign-up',
  login: '/sign-in',
  signup: '/sign-up',
  baseUrl: 'http://localhost:3000'

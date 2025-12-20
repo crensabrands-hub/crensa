@@ -13,10 +13,11 @@ export async function GET(request: NextRequest) {
  }
 
  const searchParams = request.nextUrl.searchParams;
- const role = searchParams.get('role') || 'member';
+ let role = searchParams.get('role') || 'member'; // Default to member role
 
  if (!['creator', 'member'].includes(role)) {
- return NextResponse.redirect(new URL('/sign-in', request.url));
+ // If invalid role, default to member
+ role = 'member';
  }
 
  const existingUser = await userRepository.findByClerkId(userId);

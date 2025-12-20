@@ -18,7 +18,8 @@ export async function runMigrations() {
  }
 }
 
-if (require.main === module) {
+// Check if this file is being run directly
+if (import.meta.url === `file://${process.argv[1]}`) {
  runMigrations()
  .then(() => {
  console.log('Migration process completed')

@@ -25,11 +25,11 @@ export interface EnvironmentConfig {
 
 const developmentConfig: EnvironmentConfig = {
  baseUrl: "http://localhost:3000",
- creatorSignupUrl: "/sign-up?role=creator",
- memberSignupUrl: "/sign-up?role=member",
+ creatorSignupUrl: "/creator-signup",
+ memberSignupUrl: "/sign-up",
  creatorSigninUrl: "/sign-in?role=creator",
  memberSigninUrl: "/sign-in?role=member",
- earlyAccessUrl: "/sign-up?role=member",
+ earlyAccessUrl: "/sign-up",
  loginUrl: "/sign-in",
  signupUrl: "/sign-up",
  supportEmail: "dev@crensa.com",
@@ -48,11 +48,11 @@ const developmentConfig: EnvironmentConfig = {
 
 const productionConfig: EnvironmentConfig = {
  baseUrl: "https://crensa.com",
- creatorSignupUrl: "/sign-up?role=creator",
- memberSignupUrl: "/sign-up?role=member",
+ creatorSignupUrl: "/creator-signup",
+ memberSignupUrl: "/sign-up",
  creatorSigninUrl: "/sign-in?role=creator",
  memberSigninUrl: "/sign-in?role=member",
- earlyAccessUrl: "/sign-up?role=member",
+ earlyAccessUrl: "/sign-up",
  loginUrl: "/sign-in",
  signupUrl: "/sign-up",
  supportEmail: "hello@crensa.com",
@@ -71,11 +71,11 @@ const productionConfig: EnvironmentConfig = {
 
 const stagingConfig: EnvironmentConfig = {
  baseUrl: "https://staging.crensa.com",
- creatorSignupUrl: "/sign-up?role=creator",
- memberSignupUrl: "/sign-up?role=member",
+ creatorSignupUrl: "/creator-signup",
+ memberSignupUrl: "/sign-up",
  creatorSigninUrl: "/sign-in?role=creator",
  memberSigninUrl: "/sign-in?role=member",
- earlyAccessUrl: "/sign-up?role=member",
+ earlyAccessUrl: "/sign-up",
  loginUrl: "/sign-in",
  signupUrl: "/sign-up",
  supportEmail: "staging@crensa.com",
