@@ -111,7 +111,8 @@ export class SeriesAccessService {
  id: true,
  seriesId: true,
  creatorId: true,
- isFree: true // Include isFree flag
+ isFree: true,
+ coinPrice: true // Include coinPrice to check for free videos
  }
  });
 
@@ -120,8 +121,8 @@ export class SeriesAccessService {
  return { hasAccess: false };
  }
 
- // Free videos are accessible to everyone
- if (video.isFree) {
+ // Free videos are accessible to everyone (either isFree flag or coinPrice === 0)
+ if (video.isFree || video.coinPrice === 0) {
  return {
  hasAccess: true,
  accessType: 'video_purchase' // Use existing type for compatibility

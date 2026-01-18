@@ -12,6 +12,7 @@ export interface VideoData {
  thumbnailUrl: string;
  duration: number;
  creditCost: number;
+ coinPrice?: number;
  category: string;
  tags: string[];
  aspectRatio: string;
@@ -185,6 +186,7 @@ export class IdentifierResolutionService {
  }
 
  const record = videoData[0];
+ const coinPrice = record.video.coinPrice || 0;
 
  const transformedVideo: VideoData = {
  id: record.video.id,
@@ -194,6 +196,7 @@ export class IdentifierResolutionService {
  thumbnailUrl: record.video.thumbnailUrl,
  duration: record.video.duration,
  creditCost: parseFloat(record.video.creditCost),
+ coinPrice: coinPrice,
  category: record.video.category,
  tags: Array.isArray(record.video.tags) ? record.video.tags : [],
  aspectRatio: record.video.aspectRatio || '16:9',
@@ -210,7 +213,7 @@ export class IdentifierResolutionService {
  }
  };
 
- const access = await this.determineVideoAccess(videoId, userId, record.creator.id);
+ const access = await this.determineVideoAccess(videoId, userId, record.creator.id, coinPrice);
 
  return {
  success: true,
@@ -262,6 +265,7 @@ export class IdentifierResolutionService {
  }
 
  const record = shareData[0];
+ const coinPrice = record.video.coinPrice || 0;
 
  this.updateShareTokenStats(record.share.id).catch(error => {
  console.error('Failed to update share token stats:', error);
@@ -275,6 +279,7 @@ export class IdentifierResolutionService {
  thumbnailUrl: record.video.thumbnailUrl,
  duration: record.video.duration,
  creditCost: parseFloat(record.video.creditCost),
+ coinPrice: coinPrice,
  category: record.video.category,
  tags: Array.isArray(record.video.tags) ? record.video.tags : [],
  aspectRatio: record.video.aspectRatio || '16:9',
@@ -307,7 +312,7 @@ export class IdentifierResolutionService {
  video: transformedVideo
  };
 
- const access = await this.determineTokenAccess(record.video.id, userId, record.creator.id, token);
+ const access = await this.determineTokenAccess(record.video.id, userId, record.creator.id, token, coinPrice);
 
  return {
  success: true,
@@ -327,8 +332,16 @@ export class IdentifierResolutionService {
  }
  }
 
- private async determineVideoAccess(videoId: string, userId?: string, creatorId?: string): Promise<AccessInfo> {
+ private async determineVideoAccess(videoId: string, userId?: string, creatorId?: string, coinPrice: number = 0): Promise<AccessInfo> {
  try {
+ // Free videos (0 coins) are accessible to everyone who is signed in
+ if (coinPrice === 0 && userId) {
+ return {
+ hasAccess: true,
+ accessType: 'owned',
+ requiresPurchase: false
+ };
+ }
 
  if (!userId) {
  return {
@@ -405,8 +418,17 @@ export class IdentifierResolutionService {
  }
  }
 
- private async determineTokenAccess(videoId: string, userId?: string, creatorId?: string, shareToken?: string): Promise<AccessInfo> {
+ private async determineTokenAccess(videoId: string, userId?: string, creatorId?: string, shareToken?: string, coinPrice: number = 0): Promise<AccessInfo> {
  try {
+ // Free videos (0 coins) are accessible to everyone who is signed in
+ if (coinPrice === 0 && userId) {
+ return {
+ hasAccess: true,
+ accessType: 'owned',
+ shareToken,
+ requiresPurchase: false
+ };
+ }
 
  if (userId && creatorId && userId === creatorId) {
  return {
