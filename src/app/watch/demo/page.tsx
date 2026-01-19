@@ -3,10 +3,19 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Lock, BarChart2, Twitter, Instagram, Music, Youtube } from "lucide-react";
+import { Lock, BarChart2, Twitter, Instagram, Music, Youtube, X, Coins, Crown } from "lucide-react";
 
 export default function WatchDemoPage() {
     const [currentEpisode, setCurrentEpisode] = useState(1);
+    const [showUnlockModal, setShowUnlockModal] = useState(false);
+
+    const handleEpisodeClick = (id: number, isLocked: boolean) => {
+        if (isLocked) {
+            setShowUnlockModal(true);
+        } else {
+            setCurrentEpisode(id);
+        }
+    };
 
     // ===== Dummy episodes data =====
     const episodes = Array.from({ length: 63 }).map((_, i) => ({
@@ -18,6 +27,14 @@ export default function WatchDemoPage() {
     }));
 
     const ep = episodes[currentEpisode - 1];
+
+    const handleVideoEnded = () => {
+        const nextEpisodeId = currentEpisode + 1;
+        if (nextEpisodeId <= episodes.length) {
+            const isLocked = nextEpisodeId > 10;
+            handleEpisodeClick(nextEpisodeId, isLocked);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#f8f9fa]">
@@ -44,6 +61,8 @@ export default function WatchDemoPage() {
                                 key={ep.video}
                                 src={ep.video}
                                 controls
+                                autoPlay
+                                onEnded={handleVideoEnded}
                                 className="w-full h-full object-contain"
                             />
                         </div>
@@ -80,15 +99,14 @@ export default function WatchDemoPage() {
                                     return (
                                         <button
                                             key={item.id}
-                                            disabled={isLocked}
-                                            onClick={() => setCurrentEpisode(item.id)}
+                                            onClick={() => handleEpisodeClick(item.id, isLocked)}
                                             className={`
                         relative aspect-square flex flex-col items-center justify-center rounded-lg transition-all duration-300
                         ${isActive
                                                     ? "bg-pink-600 text-white shadow-lg shadow-pink-200 scale-105 z-10"
                                                     : "bg-white text-gray-700 shadow-sm hover:translate-y-[-1px] hover:shadow-md hover:border-pink-200 border border-transparent"
                                                 }
-                        ${isLocked ? "opacity-60 grayscale-[0.5] cursor-not-allowed" : "cursor-pointer"}
+                        ${isLocked ? "opacity-60 grayscale-[0.5] hover:opacity-80 hover:scale-105" : "cursor-pointer"}
                       `}
                                         >
                                             {isActive && (
@@ -337,6 +355,76 @@ export default function WatchDemoPage() {
           background: #9ca3af;
         }
       `}</style>
+            {showUnlockModal && <UnlockModal onClose={() => setShowUnlockModal(false)} />}
+        </div>
+    );
+}
+
+function UnlockModal({ onClose }: { onClose: () => void }) {
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 relative">
+
+                {/* Close Button */}
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-10"
+                >
+                    <X size={20} className="text-gray-500" />
+                </button>
+
+                {/* Banner Image / Header */}
+                <div className="h-32 bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center relative overflow-hidden">
+                    <div className="absolute inset-0 opacity-20">
+                        {/* Abstract circles or pattern */}
+                        <div className="absolute top-[-50%] left-[-20%] w-[100%] h-[200%] bg-white rounded-full opacity-20 blur-3xl"></div>
+                    </div>
+                    <Crown size={48} className="text-white relative z-10 drop-shadow-md" />
+                </div>
+
+                <div className="p-6 text-center">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Unlock This Episode</h3>
+                    <p className="text-gray-500 text-sm mb-6">
+                        Proceed with coins or upgrade to Premium for unlimited access!
+                    </p>
+
+                    <div className="space-y-3">
+                        {/* Option 1: Buy Coins */}
+                        <button className="w-full bg-white border-2 border-amber-400 hover:bg-amber-50 group p-4 rounded-xl flex items-center justify-between transition-all relative overflow-hidden">
+                            <div className="flex items-center gap-3 relative z-10">
+                                <div className="p-2 bg-amber-100 text-amber-600 rounded-full">
+                                    <Coins size={20} />
+                                </div>
+                                <div className="text-left">
+                                    <div className="font-bold text-gray-900">Unlock with Coins</div>
+                                    <div className="text-xs text-gray-500">Spend 50 coins for this episode</div>
+                                </div>
+                            </div>
+                            <span className="text-amber-600 font-bold relative z-10">50¢</span>
+                        </button>
+
+                        {/* Option 2: Premium */}
+                        <button className="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 p-4 rounded-xl flex items-center justify-between text-white transition-opacity shadow-lg shadow-pink-200">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-white/20 rounded-full backdrop-blur-sm">
+                                    <Crown size={20} />
+                                </div>
+                                <div className="text-left">
+                                    <div className="font-bold">Get Premium Access</div>
+                                    <div className="text-xs text-white/80">Watch everything ad-free</div>
+                                </div>
+                            </div>
+                            <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold">
+                                Best Value
+                            </span>
+                        </button>
+                    </div>
+
+                    <p className="text-xs text-center text-gray-400 mt-6">
+                        Secure payment powered by Crensa
+                    </p>
+                </div>
+            </div>
         </div>
     );
 }
