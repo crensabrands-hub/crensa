@@ -1,12 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import { PerformanceMonitor } from "@/components/PerformanceMonitor";
 import { ErrorBoundaryLayout } from "@/components/layout/ErrorBoundaryLayout";
-import { ErrorReportingDashboard } from "@/components/debug/ErrorReportingDashboard";
+import { ClientMonitors } from "@/components/ClientMonitors";
 
 import "./globals.css";
 import { ClientProviders } from "@/components/ClientProviders";
-import { AppPreloader } from "@/components";
 
 const inter = Inter({
     subsets: ["latin"],
@@ -72,7 +70,7 @@ export default function RootLayout({
                 />
             </head>
             <body className="font-sans antialiased">
-                <PerformanceMonitor />
+                <ClientMonitors />
                 <ErrorBoundaryLayout
                     level="page"
                     sectionName="root-layout"
@@ -83,7 +81,6 @@ export default function RootLayout({
                         {children}
                     </ClientProviders>
                 </ErrorBoundaryLayout>
-                <ErrorReportingDashboard />
             </body>
         </html>
     );

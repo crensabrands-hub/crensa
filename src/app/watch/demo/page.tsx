@@ -143,7 +143,7 @@ export default function WatchDemoPage() {
                     </div>
 
                     <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-screen-md">
-                        {ep.title}. At her parents' anniversary party, a successful CEO is dismissed as a low-class nobody, her diamond gift is called fake, and she's even banned from the table!
+                        {ep.title}. At her parents&apos; anniversary party, a successful CEO is dismissed as a low-class nobody, her diamond gift is called fake, and she&apos;s even banned from the table!
                     </p>
 
                     <div className="flex items-center gap-3 mb-8">

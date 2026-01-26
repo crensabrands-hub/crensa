@@ -45,6 +45,7 @@ const nextConfig = {
 
     webpack: (config, { dev, isServer }) => {
 
+        /*
         if (!dev && !isServer) {
             config.optimization.splitChunks = {
                 chunks: 'all',
@@ -75,8 +76,8 @@ const nextConfig = {
                         priority: 30,
                     },
 
-                    layout: {
-                        name: 'layout',
+                    'layout-group': {
+                        name: 'layout-group',
                         test: /[\\/]src[\\/]components[\\/]layout[\\/]/,
                         chunks: 'all',
                         priority: 25,
@@ -84,6 +85,7 @@ const nextConfig = {
                 },
             };
         }
+        */
 
         return config;
     },
