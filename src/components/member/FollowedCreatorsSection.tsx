@@ -118,7 +118,7 @@ export function FollowedCreatorsSection({
     if (creators.length === 0) {
         return (
             <div className={`text-center py-8 text-neutral-dark-gray ${className}`}>
-                <p className="mb-4">You haven't followed any creators yet.</p>
+                <p className="mb-4">You haven&apos;t followed any creators yet.</p>
                 <Link
                     href="/discover"
                     className="inline-block px-6 py-2 bg-primary-blue text-white rounded-lg hover:bg-primary-dark-blue transition-colors"
