@@ -2,9 +2,11 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { ErrorBoundaryLayout } from "@/components/layout/ErrorBoundaryLayout";
 import { ClientMonitors } from "@/components/ClientMonitors";
+import { PWARegister } from "@/components/PWARegister";
 
 import "./globals.css";
 import { ClientProviders } from "@/components/ClientProviders";
+
 
 const inter = Inter({
     subsets: ["latin"],
@@ -90,6 +92,7 @@ export default function RootLayout({
             </head>
             <body className="font-sans antialiased">
                 <ClientMonitors />
+                <PWARegister />
                 <ErrorBoundaryLayout
                     level="page"
                     sectionName="root-layout"
