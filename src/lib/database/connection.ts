@@ -16,6 +16,9 @@ if (typeof window === 'undefined') {
     } else {
         console.warn('⚠️ No WebSocket constructor found. Database connections might fail.');
     }
+
+    // Enable connection caching for better performance and stability
+    neonConfig.fetchConnectionCache = true;
 }
 
 function getDatabaseUrl(): string {
@@ -43,9 +46,10 @@ if (typeof window === 'undefined') {
 if (!globalForDb.pool) {
     globalForDb.pool = new Pool({
         connectionString,
-        max: 10, // Reduced max connections for serverless stability
-        idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 10000,
+        max: 20, // Increased max connections
+        idleTimeoutMillis: 60000, // 60s
+        connectionTimeoutMillis: 30000, // 30s
+        maxUses: 7500,
     });
 
     // Handle pool errors to prevent process crashes
