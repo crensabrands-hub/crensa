@@ -10,7 +10,6 @@ const nextConfig = {
     },
 
     images: {
-        domains: ['images.unsplash.com'],
         remotePatterns: [
             {
                 protocol: "https",
@@ -130,7 +129,7 @@ const nextConfig = {
         ];
     },
 
-    serverExternalPackages: ["@neondatabase/serverless"],
+    serverExternalPackages: ["@neondatabase/serverless", "ws"],
 };
 
 export default nextConfig;
