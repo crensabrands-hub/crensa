@@ -15,3 +15,4 @@ export { useProfileVisitTracking, useVisitHistory } from './useProfileVisitTrack
 
 export { useFeaturedContent } from './useFeaturedContent';
 export { useCategories } from './useCategories';
+export { useTrendingCreators } from './useTrendingCreators';

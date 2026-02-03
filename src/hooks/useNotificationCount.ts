@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
 
 interface NotificationCount {
@@ -19,7 +19,7 @@ export function useNotificationCount(): UseNotificationCountReturn {
  const [error, setError] = useState<string | null>(null);
  const { userProfile } = useAuthContext();
 
- const fetchCount = async () => {
+ const fetchCount = useCallback(async () => {
  if (!userProfile) {
  setLoading(false);
  return;
@@ -47,7 +47,7 @@ export function useNotificationCount(): UseNotificationCountReturn {
  } finally {
  setLoading(false);
  }
- };
+ }, [userProfile]);
 
  useEffect(() => {
  fetchCount();
@@ -55,7 +55,7 @@ export function useNotificationCount(): UseNotificationCountReturn {
  const interval = setInterval(fetchCount, 30000);
  
  return () => clearInterval(interval);
- }, [userProfile]);
+ }, [fetchCount]);
 
  const refetch = () => {
  fetchCount();

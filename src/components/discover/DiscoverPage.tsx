@@ -148,7 +148,7 @@ export default function DiscoverPage({ userId }: DiscoverPageProps) {
 
     useEffect(() => {
         fetchVideos(1, true);
-    }, []);
+    }, [fetchVideos]);
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -163,7 +163,7 @@ export default function DiscoverPage({ userId }: DiscoverPageProps) {
         }, 300); // Debounce API calls
 
         return () => clearTimeout(timeoutId);
-    }, [searchQuery, filters]);
+    }, [searchQuery, filters, fetchVideos]);
 
     const handleVideoClick = (video: Video) => {
         try {
@@ -182,10 +182,10 @@ export default function DiscoverPage({ userId }: DiscoverPageProps) {
         }
     };
 
-    const handleLoadMore = () => {
+    const handleLoadMore = useCallback(() => {
         if (!pagination.hasMore || isLoadingMore) return;
         fetchVideos(pagination.page + 1, false);
-    };
+    }, [pagination.hasMore, pagination.page, isLoadingMore, fetchVideos]);
 
     const handleSearchChange = (query: string) => {
         setSearchQuery(query);
@@ -225,8 +225,29 @@ export default function DiscoverPage({ userId }: DiscoverPageProps) {
         }
     };
 
-    const handleScroll = useCallback(
-        throttle(() => {
+    const handleScroll = useCallback(() => {
+        const scrollY = window.scrollY || document.documentElement.scrollTop;
+        scrollPositionRef.current = scrollY;
+        setShowScrollTop(scrollY > 400);
+
+        if (isMobile && pagination.hasMore && !isLoadingMore) {
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.documentElement.scrollHeight;
+            const scrollTop = window.scrollY;
+
+            if (scrollTop + windowHeight >= documentHeight - 200) {
+                handleLoadMore();
+            }
+        }
+    }, [isMobile, pagination.hasMore, isLoadingMore, handleLoadMore]);
+
+    // Throttled scroll handler using ref
+    const scrollTimeoutRef = useRef<number | null>(null);
+    
+    const throttledHandleScroll = useCallback(() => {
+        if (scrollTimeoutRef.current !== null) return;
+        
+        scrollTimeoutRef.current = window.setTimeout(() => {
             const scrollY = window.scrollY || document.documentElement.scrollTop;
             scrollPositionRef.current = scrollY;
             setShowScrollTop(scrollY > 400);
@@ -240,16 +261,17 @@ export default function DiscoverPage({ userId }: DiscoverPageProps) {
                     handleLoadMore();
                 }
             }
-        }, 100),
-        [isMobile, pagination.hasMore, isLoadingMore, handleLoadMore]
-    );
+            
+            scrollTimeoutRef.current = null;
+        }, 100);
+    }, [isMobile, pagination.hasMore, isLoadingMore, handleLoadMore]);
 
     useEffect(() => {
         if (isMobile) {
-            window.addEventListener('scroll', handleScroll, { passive: true });
-            return () => window.removeEventListener('scroll', handleScroll);
+            window.addEventListener('scroll', throttledHandleScroll, { passive: true });
+            return () => window.removeEventListener('scroll', throttledHandleScroll);
         }
-    }, [isMobile, handleScroll]);
+    }, [isMobile, throttledHandleScroll]);
 
     if (isLoading) {
         return (

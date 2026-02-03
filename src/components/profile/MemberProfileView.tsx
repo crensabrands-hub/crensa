@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { MemberProfile } from "@/contexts/AuthContext";
 import {
  WalletIcon,
@@ -68,10 +69,12 @@ export default function MemberProfileView({
  <div className="flex items-center space-x-4">
  <div className="w-16 h-16 rounded-full bg-gradient-primary flex items-center justify-center overflow-hidden">
  {profile.avatar ? (
- <img
+ <Image
  src={profile.avatar}
  alt={`${profile.username}'s avatar`}
- className="w-full h-full object-cover"
+ fill
+ className="object-cover"
+ sizes="64px"
  />
  ) : (
  <span className="text-primary-navy font-bold text-xl">

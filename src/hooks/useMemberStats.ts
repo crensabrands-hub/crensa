@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
 
 interface MemberStats {
@@ -22,48 +22,45 @@ export function useMemberStats(): UseMemberStatsReturn {
  const [error, setError] = useState<string | null>(null);
  const { userProfile } = useAuthContext();
 
- const fetchStats = async () => {
- if (!userProfile) {
- setLoading(false);
- return;
- }
+ const fetchStats = useCallback(async () => {
+  if (!userProfile) {
+    setLoading(false);
+    return;
+  }
 
- try {
- setLoading(true);
- setError(null);
+  try {
+    setLoading(true);
+    setError(null);
 
- const response = await fetch('/api/member/stats');
- const result = await response.json();
+    const response = await fetch('/api/member/stats');
+    const result = await response.json();
 
- if (!response.ok) {
- throw new Error(result.error || 'Failed to fetch member stats');
- }
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to fetch member stats');
+    }
 
- if (result.success) {
- setStats(result.data);
- } else {
- throw new Error('Failed to load member stats');
- }
- } catch (err) {
- console.error('Error fetching member stats:', err);
- setError(err instanceof Error ? err.message : 'Unknown error occurred');
- } finally {
- setLoading(false);
- }
- };
-
- useEffect(() => {
- fetchStats();
+    if (result.success) {
+      setStats(result.data);
+    }
+  } catch (err) {
+    setError(err instanceof Error ? err.message : 'An error occurred');
+  } finally {
+    setLoading(false);
+  }
  }, [userProfile]);
 
- const refetch = () => {
- fetchStats();
- };
+ useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
- return {
- stats,
- loading,
- error,
- refetch,
- };
+  const refetch = () => {
+    fetchStats();
+  };
+
+  return {
+    stats,
+    loading,
+    error,
+    refetch,
+  };
 }

@@ -1,8 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { db } from "@/lib/database";
-import { seriesPurchases, seriesProgress, users } from "@/lib/database/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { db, schema } from "@/lib/database";
+import { seriesPurchases, seriesProgress, users, series, creatorProfiles, videos } from "@/lib/database/schema";
+import { eq, and, desc, SQLWrapper } from "drizzle-orm";
 import MemberSeriesLibraryClient from "./MemberSeriesLibraryClient";
 
 export default async function MemberSeriesPage() {
@@ -13,9 +13,8 @@ export default async function MemberSeriesPage() {
  redirect("/sign-in");
  }
 
- const user = await db.query.users.findFirst({
- where: eq(users.clerkId, clerkUserId),
- });
+ const userResult = await db.select().from(users).where(eq(users.clerkId, clerkUserId)).limit(1);
+ const user = userResult[0];
 
  if (!user) {
  redirect("/sign-in");
@@ -25,52 +24,52 @@ export default async function MemberSeriesPage() {
  redirect("/");
  }
 
- const purchases = await db.query.seriesPurchases.findMany({
- where: and(
+ const purchases = await db.select().from(seriesPurchases).where(and(
  eq(seriesPurchases.userId, user.id),
  eq(seriesPurchases.status, "completed")
- ),
- with: {
- series: {
- with: {
- creator: {
- with: {
- creatorProfile: true,
- },
- },
- videos: {
- columns: {
- id: true,
- },
- },
- },
- },
- },
- orderBy: [desc(seriesPurchases.purchasedAt)],
- });
+ )).orderBy(desc(seriesPurchases.purchasedAt));
 
  const purchasedSeriesWithProgress = await Promise.all(
  purchases.map(async (purchase) => {
- const progress = await db.query.seriesProgress.findFirst({
- where: and(
+ // Get series data
+ const seriesData = await db.select().from(series).where(eq(series.id, purchase.seriesId)).limit(1);
+ const seriesInfo = seriesData[0];
+ 
+ // Get creator data
+ const creatorData = await db.select().from(users).where(eq(users.id, seriesInfo.creatorId)).limit(1);
+ const creator = creatorData[0];
+ 
+ // Get creator profile
+ const creatorProfileData = await db.select().from(creatorProfiles).where(eq(creatorProfiles.userId, creator.id)).limit(1);
+ 
+ // Get videos count for the series
+ const videosData = await db.select().from(videos).where(eq(videos.seriesId, seriesInfo.id));
+ 
+ const progress = await db.select().from(seriesProgress).where(and(
  eq(seriesProgress.userId, user.id),
  eq(seriesProgress.seriesId, purchase.seriesId)
- ),
- });
+ )).limit(1);
 
  return {
- series: purchase.series,
+ series: {
+ ...seriesInfo,
+ creator: {
+ ...creator,
+ creatorProfile: creatorProfileData[0] || null,
+ },
+ videos: videosData.map(v => ({ id: v.id })),
+ },
  purchaseDate: purchase.purchasedAt,
- progress: progress
+ progress: progress[0]
  ? {
- videosWatched: progress.videosWatched,
- totalVideos: progress.totalVideos,
- percentage: parseFloat(progress.progressPercentage),
- lastWatchedAt: progress.lastWatchedAt,
+ videosWatched: progress[0].videosWatched,
+ totalVideos: progress[0].totalVideos,
+ percentage: parseFloat(progress[0].progressPercentage),
+ lastWatchedAt: progress[0].lastWatchedAt,
  }
  : {
  videosWatched: 0,
- totalVideos: purchase.series.videoCount,
+ totalVideos: seriesInfo.videoCount,
  percentage: 0,
  lastWatchedAt: null,
  },

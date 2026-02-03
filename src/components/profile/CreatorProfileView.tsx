@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React from "react";
+import Image from "next/image";
 import { CreatorProfile } from '@/contexts/AuthContext';
 import { EyeIcon, CurrencyDollarIcon, PlayIcon, LinkIcon } from '@heroicons/react/24/outline';
 import { ProfileComponentErrorBoundary } from './ProfileErrorBoundary';
@@ -45,10 +46,12 @@ export default function CreatorProfileView({
  <div className="flex items-center space-x-4">
  <div className="w-16 h-16 rounded-full bg-gradient-primary flex items-center justify-center overflow-hidden">
  {profile.avatar ? (
- <img
+ <Image
  src={profile.avatar}
  alt={`${profile.displayName}'s avatar`}
- className="w-full h-full object-cover"
+ fill
+ className="object-cover"
+ sizes="64px"
  />
  ) : (
  <span className="text-primary-navy font-bold text-xl">

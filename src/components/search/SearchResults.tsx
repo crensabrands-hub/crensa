@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Video } from "@/types";
 
@@ -17,7 +18,6 @@ export interface SearchResult {
  };
  creditCost?: number;
  duration?: number;
-
  totalPrice?: number;
  videoCount?: number;
  category?: string;
@@ -159,16 +159,16 @@ export default function SearchResults({
  role="option"
  aria-selected={index === selectedIndex}
  >
- {}
  <div className="flex-shrink-0">
  {result.type === 'video' ? (
  <div className="relative w-16 h-12 bg-neutral-light-gray rounded overflow-hidden">
  {result.thumbnail ? (
- <img
+ <Image
  src={result.thumbnail}
  alt={result.title}
- className="w-full h-full object-cover"
- loading="lazy"
+ fill
+ className="object-cover"
+ sizes="(max-width: 64px) 100vw, 64px"
  />
  ) : (
  <div className="w-full h-full flex items-center justify-center">
@@ -186,11 +186,12 @@ export default function SearchResults({
  ) : result.type === 'series' ? (
  <div className="relative w-16 h-12 bg-neutral-light-gray rounded overflow-hidden">
  {result.thumbnail ? (
- <img
+ <Image
  src={result.thumbnail}
  alt={result.title}
- className="w-full h-full object-cover"
- loading="lazy"
+ fill
+ className="object-cover"
+ sizes="(max-width: 64px) 100vw, 64px"
  />
  ) : (
  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent-pink/20 via-accent-teal/20 to-primary-neon-yellow/20">
@@ -207,7 +208,6 @@ export default function SearchResults({
  <span>{result.videoCount}</span>
  </div>
  )}
- {}
  <div className="absolute top-1 left-1 bg-accent-pink/90 text-white text-xs px-1 rounded">
  SERIES
  </div>
@@ -215,14 +215,15 @@ export default function SearchResults({
  ) : (
  <div className="w-12 h-12 bg-neutral-light-gray rounded-full overflow-hidden">
  {result.creator?.avatar ? (
- <img
+ <Image
  src={result.creator.avatar}
  alt={result.creator.displayName || result.creator.username}
- className="w-full h-full object-cover"
- loading="lazy"
+ fill
+ className="object-cover"
+ sizes="(max-width: 48px) 100vw, 48px"
  />
  ) : (
- <div className="w-full h-full flex items-center justify-center">
+ <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-navy/20 to-accent-teal/20">
  <svg className="w-6 h-6 text-neutral-dark-gray" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
  </svg>
@@ -232,7 +233,6 @@ export default function SearchResults({
  )}
  </div>
 
- {}
  <div className="flex-1 min-w-0">
  <div className="flex items-start justify-between">
  <div className="flex-1 min-w-0">
@@ -285,7 +285,6 @@ export default function SearchResults({
  </div>
  </div>
 
- {}
  {index === selectedIndex && (
  <div className="flex-shrink-0">
  <svg className="w-4 h-4 text-primary-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24">

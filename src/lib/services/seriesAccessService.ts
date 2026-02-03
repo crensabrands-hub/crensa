@@ -65,10 +65,8 @@ export class SeriesAccessService {
  try {
  const { userId, seriesId } = params;
 
- const seriesData = await db.query.series.findFirst({
- where: eq(series.id, seriesId),
- columns: { creatorId: true }
- });
+ const seriesDataResult = await db.select().from(series).where(eq(series.id, seriesId)).limit(1);
+ const seriesData = seriesDataResult[0];
 
  if (seriesData && seriesData.creatorId === userId) {
  return {
@@ -77,13 +75,12 @@ export class SeriesAccessService {
  };
  }
 
- const seriesPurchase = await db.query.seriesPurchases.findFirst({
- where: and(
+ const seriesPurchaseResult = await db.select().from(seriesPurchases).where(and(
  eq(seriesPurchases.userId, userId),
  eq(seriesPurchases.seriesId, seriesId),
  eq(seriesPurchases.status, 'completed')
- )
- });
+ )).limit(1);
+ const seriesPurchase = seriesPurchaseResult[0];
 
  if (seriesPurchase) {
  return {
@@ -105,14 +102,8 @@ export class SeriesAccessService {
  try {
  const { userId, videoId } = params;
 
- const video = await db.query.videos.findFirst({
- where: eq(videos.id, videoId),
- columns: {
- id: true,
- seriesId: true,
- creatorId: true
- }
- });
+ const videoResult = await db.select().from(videos).where(eq(videos.id, videoId)).limit(1);
+ const video = videoResult[0];
 
  if (!video) {
  console.error('[SeriesAccess] Video not found:', videoId);
@@ -137,14 +128,13 @@ export class SeriesAccessService {
  }
  }
 
- const videoPurchase = await db.query.transactions.findFirst({
- where: and(
+ const videoPurchaseResult = await db.select().from(transactions).where(and(
  eq(transactions.userId, userId),
  eq(transactions.videoId, videoId),
  eq(transactions.type, 'video_view'),
  eq(transactions.status, 'completed')
- )
- });
+ )).limit(1);
+ const videoPurchase = videoPurchaseResult[0];
 
  if (videoPurchase) {
  return {
@@ -165,39 +155,26 @@ export class SeriesAccessService {
  try {
  const { userId, seriesId } = params;
 
- const seriesData = await db.query.series.findFirst({
- where: eq(series.id, seriesId),
- columns: {
- id: true,
- coinPrice: true
- }
- });
+ const seriesDataResult = await db.select().from(series).where(eq(series.id, seriesId)).limit(1);
+ const seriesData = seriesDataResult[0];
 
  if (!seriesData) {
  throw new Error('Series not found');
  }
 
- const seriesVideos = await db.query.videos.findMany({
- where: eq(videos.seriesId, seriesId),
- columns: {
- id: true,
- title: true,
- coinPrice: true
- }
- });
+ const seriesVideos = await db.select().from(videos).where(eq(videos.seriesId, seriesId));
 
  const ownedVideos: OwnedVideo[] = [];
  let totalDeduction = 0;
 
  for (const video of seriesVideos) {
- const purchase = await db.query.transactions.findFirst({
- where: and(
+ const purchaseResult = await db.select().from(transactions).where(and(
  eq(transactions.userId, userId),
  eq(transactions.videoId, video.id),
  eq(transactions.type, 'video_view'),
  eq(transactions.status, 'completed')
- )
- });
+ )).limit(1);
+ const purchase = purchaseResult[0];
 
  if (purchase) {
  ownedVideos.push({
@@ -242,10 +219,8 @@ export class SeriesAccessService {
  try {
  const { userId, seriesId, purchasePrice, paymentId, razorpayOrderId, metadata } = params;
 
- const seriesData = await db.query.series.findFirst({
- where: eq(series.id, seriesId),
- columns: { id: true, isActive: true }
- });
+ const seriesDataResult = await db.select().from(series).where(eq(series.id, seriesId)).limit(1);
+ const seriesData = seriesDataResult[0];
 
  if (!seriesData) {
  return {
@@ -261,13 +236,12 @@ export class SeriesAccessService {
  };
  }
 
- const existingPurchase = await db.query.seriesPurchases.findFirst({
- where: and(
+ const existingPurchaseResult = await db.select().from(seriesPurchases).where(and(
  eq(seriesPurchases.userId, userId),
  eq(seriesPurchases.seriesId, seriesId),
  eq(seriesPurchases.status, 'completed')
- )
- });
+ )).limit(1);
+ const existingPurchase = existingPurchaseResult[0];
 
  if (existingPurchase) {
  return {
@@ -328,21 +302,18 @@ export class SeriesAccessService {
  try {
  const { userId, seriesId } = params;
 
- const seriesVideos = await db.query.videos.findMany({
- where: eq(videos.seriesId, seriesId)
- });
+ const seriesVideos = await db.select().from(videos).where(eq(videos.seriesId, seriesId));
 
  const unownedVideos: Video[] = [];
 
  for (const video of seriesVideos) {
- const purchase = await db.query.transactions.findFirst({
- where: and(
+ const purchaseResult = await db.select().from(transactions).where(and(
  eq(transactions.userId, userId),
  eq(transactions.videoId, video.id),
  eq(transactions.type, 'video_view'),
  eq(transactions.status, 'completed')
- )
- });
+ )).limit(1);
+ const purchase = purchaseResult[0];
 
  if (!purchase) {
  unownedVideos.push(video);
@@ -358,12 +329,11 @@ export class SeriesAccessService {
 
  async verifySeriesPurchase(seriesPurchaseId: string): Promise<boolean> {
  try {
- const purchase = await db.query.seriesPurchases.findFirst({
- where: and(
+ const purchaseResult = await db.select().from(seriesPurchases).where(and(
  eq(seriesPurchases.id, seriesPurchaseId),
  eq(seriesPurchases.status, 'completed')
- )
- });
+ )).limit(1);
+ const purchase = purchaseResult[0];
 
  return !!purchase;
  } catch (error) {

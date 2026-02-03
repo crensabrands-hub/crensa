@@ -76,7 +76,7 @@ export function useOptimizedCreatorDashboard() {
  isRegisteredRef.current = false;
  }
  };
- }, [userProfile?.role, result.mutate]);
+ }, [userProfile?.role, result]);
 
  const preloadRelatedData = useCallback(() => {
 
@@ -142,7 +142,7 @@ export function useOptimizedCreatorAnalytics(timeRange: string = '7d') {
  isRegisteredRef.current = false;
  }
  };
- }, [userProfile?.role, timeRange, url, result.mutate]);
+ }, [userProfile?.role, timeRange, result, url]);
 
  const refreshTimeRange = useCallback(async (newTimeRange: string) => {
  const newUrl = `/api/creator/analytics?timeRange=${newTimeRange}`;
@@ -186,13 +186,13 @@ export function useCreatorDataManager() {
  ];
 
  await Promise.allSettled(refreshPromises);
- }, [userProfile?.role, dashboard.refetch, analytics.refetch, earnings.refetch]);
+ }, [userProfile?.role, dashboard, analytics, earnings]);
 
  const invalidateAllCache = useCallback(() => {
  cacheInvalidation.creator();
  cacheInvalidation.analytics();
  dashboard.invalidateRelatedCache();
- }, [dashboard.invalidateRelatedCache]);
+ }, [dashboard]);
 
  const isAnyLoading = dashboard.isLoading || analytics.isLoading || earnings.isLoading;
 

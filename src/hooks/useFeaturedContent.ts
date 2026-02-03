@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FeaturedContent } from '@/types';
 
 interface UseFeaturedContentResult {
@@ -15,7 +15,7 @@ export function useFeaturedContent(limit: number = 5): UseFeaturedContentResult 
  const [loading, setLoading] = useState(true);
  const [error, setError] = useState<string | null>(null);
 
- const fetchFeaturedContent = async () => {
+ const fetchFeaturedContent = useCallback(async () => {
  try {
  setLoading(true);
  setError(null);
@@ -40,11 +40,11 @@ export function useFeaturedContent(limit: number = 5): UseFeaturedContentResult 
  } finally {
  setLoading(false);
  }
- };
+ }, [limit]);
 
  useEffect(() => {
  fetchFeaturedContent();
- }, [limit]);
+ }, [fetchFeaturedContent]);
 
  const refetch = () => {
  fetchFeaturedContent();

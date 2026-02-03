@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { TrendingCreator } from '@/types';
 
 interface UseTrendingCreatorsResult {
@@ -15,7 +15,7 @@ export function useTrendingCreators(limit: number = 10): UseTrendingCreatorsResu
  const [loading, setLoading] = useState(true);
  const [error, setError] = useState<string | null>(null);
 
- const fetchTrendingCreators = async () => {
+ const fetchTrendingCreators = useCallback(async () => {
  try {
  setLoading(true);
  setError(null);
@@ -40,11 +40,11 @@ export function useTrendingCreators(limit: number = 10): UseTrendingCreatorsResu
  } finally {
  setLoading(false);
  }
- };
+ }, [limit]);
 
  useEffect(() => {
  fetchTrendingCreators();
- }, [limit]);
+ }, [fetchTrendingCreators, limit]);
 
  const refetch = () => {
  fetchTrendingCreators();

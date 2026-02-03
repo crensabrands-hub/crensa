@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import Image from 'next/image';
 import { CameraIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 interface AvatarUploadProps {
@@ -60,10 +61,12 @@ export default function AvatarUpload({
  <div className="relative group">
  <div className="w-24 h-24 rounded-full bg-gradient-primary flex items-center justify-center overflow-hidden border-4 border-neutral-white shadow-lg">
  {previewUrl ? (
- <img
+ <Image
  src={previewUrl}
  alt={`${username}'s avatar`}
- className="w-full h-full object-cover"
+ fill
+ className="object-cover"
+ sizes="96px"
  />
  ) : (
  <span className="text-primary-navy font-bold text-2xl">
