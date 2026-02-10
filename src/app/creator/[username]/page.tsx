@@ -62,7 +62,7 @@ async function getCreatorData(username: string): Promise<CreatorData | null> {
             return null;
         }
 
-        if (!user || user.role !== 'creator') {
+        if (!user) {
             return null;
         }
 
@@ -116,7 +116,7 @@ async function getCreatorData(username: string): Promise<CreatorData | null> {
             totalEarnings: user.creatorProfile?.totalEarnings || '0.00',
             socialLinks: user.creatorProfile?.socialLinks || [],
             isVerified: false,
-            createdAt: user.creatorProfile?.createdAt?.toISOString() || new Date().toISOString(),
+            createdAt: user.createdAt?.toISOString() || new Date().toISOString(),
             featuredVideos: creatorVideos.map((video) => ({
                 ...video,
                 createdAt: video.createdAt instanceof Date
@@ -147,6 +147,42 @@ export default async function CreatorProfilePage({
         const { userId } = await auth();
         if (!userId) {
             redirect(`/sign-in?redirect_url=/creator/${username}`);
+        }
+
+        if (!creatorData) {
+            throw new Error('Creator not found');
+        }
+
+        try {
+            const userRepository = new UserRepository();
+            const follower = await userRepository.findByClerkId(userId);
+
+            if (!follower) {
+                throw new Error('User not found');
+            }
+
+            // Check if already following
+            const existing = await db
+                .select()
+                .from(creatorFollows)
+                .where(
+                    and(
+                        eq(creatorFollows.followerId, follower.id),
+                        eq(creatorFollows.creatorId, creatorData.id)
+                    )
+                )
+                .limit(1);
+
+            if (existing.length === 0) {
+                // Add follow
+                await db.insert(creatorFollows).values({
+                    followerId: follower.id,
+                    creatorId: creatorData.id,
+                    createdAt: new Date(),
+                });
+            }
+        } catch (error) {
+            console.error('Error following creator:', error);
         }
     }
 
