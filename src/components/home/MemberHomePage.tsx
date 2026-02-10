@@ -10,286 +10,283 @@ import HighlightedOffersSection from './HighlightedOffersSection';
 import { Video } from '@/types';
 
 interface Creator {
- id: string;
- username: string;
- displayName: string;
- avatar?: string;
- videoCount: number;
- totalViews: number;
- category: string;
- isFollowing?: boolean;
+    id: string;
+    username: string;
+    displayName: string;
+    avatar?: string;
+    videoCount: number;
+    totalViews: number;
+    category: string;
+    isFollowing?: boolean;
 }
 
 interface UpcomingShow extends Omit<Video, 'createdAt' | 'updatedAt'> {
- releaseDate: Date;
- isNotified?: boolean;
- creator: {
- id: string;
- username: string;
- displayName: string;
- avatar?: string;
- };
+    releaseDate: Date;
+    isNotified?: boolean;
+    creator: {
+        id: string;
+        username: string;
+        displayName: string;
+        avatar?: string;
+    };
 }
 
 interface Category {
- id: string;
- name: string;
- icon: string;
- videoCount: number;
- color: string;
+    id: string;
+    name: string;
+    icon: string;
+    videoCount: number;
+    color: string;
 }
 
 interface Offer {
- id: string;
- title: string;
- description: string;
- type: 'credit_bonus' | 'membership_discount' | 'free_content' | 'early_access';
- value: string;
- originalPrice?: number;
- discountedPrice?: number;
- validUntil: Date;
- isLimited?: boolean;
- remainingCount?: number;
- ctaText: string;
- ctaLink: string;
+    id: string;
+    title: string;
+    description: string;
+    type: 'credit_bonus' | 'membership_discount' | 'free_content' | 'early_access';
+    value: string;
+    originalPrice?: number;
+    discountedPrice?: number;
+    validUntil: Date;
+    isLimited?: boolean;
+    remainingCount?: number;
+    ctaText: string;
+    ctaLink: string;
 }
 
 interface MemberHomePageProps {
- userId: string;
+    userId: string;
 }
 
 export default function MemberHomePage({ userId }: MemberHomePageProps) {
- const [featuredVideos, setFeaturedVideos] = useState<Video[]>([]);
- const [trendingCreators, setTrendingCreators] = useState<Creator[]>([]);
- const [upcomingShows, setUpcomingShows] = useState<UpcomingShow[]>([]);
- const [categories, setCategories] = useState<Category[]>([]);
- const [offers, setOffers] = useState<Offer[]>([]);
- const [selectedCategory, setSelectedCategory] = useState<string>('all');
- const [isLoading, setIsLoading] = useState(true);
- const [creatorsError, setCreatorsError] = useState<string | null>(null);
- const [followingStates, setFollowingStates] = useState<Record<string, boolean>>({});
+    const [featuredVideos, setFeaturedVideos] = useState<Video[]>([]);
+    const [trendingCreators, setTrendingCreators] = useState<Creator[]>([]);
+    const [upcomingShows, setUpcomingShows] = useState<UpcomingShow[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [offers, setOffers] = useState<Offer[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState<string>('all');
+    const [isLoading, setIsLoading] = useState(true);
+    const [creatorsError, setCreatorsError] = useState<string | null>(null);
+    const [followingStates, setFollowingStates] = useState<Record<string, boolean>>({});
 
- useEffect(() => {
- const loadHomePageData = async () => {
- try {
- setIsLoading(true);
+    useEffect(() => {
+        const loadHomePageData = async () => {
+            try {
+                setIsLoading(true);
 
- const [
- featuredResponse,
- creatorsResponse,
- categoriesResponse,
- offersResponse
- ] = await Promise.all([
- fetch('/api/home/featured-videos?limit=6'),
- fetch('/api/home/trending-creators?limit=6'),
- fetch('/api/home/categories'),
- fetch('/api/home/offers')
- ]);
+                const [
+                    featuredResponse,
+                    creatorsResponse,
+                    categoriesResponse,
+                    offersResponse
+                ] = await Promise.all([
+                    fetch('/api/home/featured-videos?limit=6'),
+                    fetch('/api/home/trending-creators?limit=6'),
+                    fetch('/api/home/categories'),
+                    fetch('/api/home/offers')
+                ]);
 
- const featuredData = featuredResponse.ok ? await featuredResponse.json() : [];
- 
- let creatorsData = [];
- if (creatorsResponse.ok) {
- creatorsData = await creatorsResponse.json();
- setCreatorsError(null);
- } else {
- const errorData = await creatorsResponse.json().catch(() => ({}));
- setCreatorsError(errorData.error || 'Failed to load trending creators');
- }
- 
- const categoriesData = categoriesResponse.ok ? await categoriesResponse.json() : [];
- const offersData = offersResponse.ok ? await offersResponse.json() : [];
+                const featuredData = featuredResponse.ok ? await featuredResponse.json() : [];
 
- setFeaturedVideos(featuredData);
- setTrendingCreators(creatorsData);
- setCategories(categoriesData);
- setOffers(offersData);
+                let creatorsData = [];
+                if (creatorsResponse.ok) {
+                    creatorsData = await creatorsResponse.json();
+                    setCreatorsError(null);
+                } else {
+                    const errorData = await creatorsResponse.json().catch(() => ({}));
+                    setCreatorsError(errorData.error || 'Failed to load trending creators');
+                }
 
- setUpcomingShows([]);
+                const categoriesData = categoriesResponse.ok ? await categoriesResponse.json() : [];
+                const offersData = offersResponse.ok ? await offersResponse.json() : [];
 
- setIsLoading(false);
- } catch (error) {
- console.error('Error loading home page data:', error);
- setIsLoading(false);
- }
- };
+                setFeaturedVideos(featuredData);
+                setTrendingCreators(creatorsData);
+                setCategories(categoriesData);
+                setOffers(offersData);
 
- loadHomePageData();
- }, [userId]);
+                setUpcomingShows([]);
 
- const handleVideoClick = (video: Video) => {
+                setIsLoading(false);
+            } catch (error) {
+                console.error('Error loading home page data:', error);
+                setIsLoading(false);
+            }
+        };
 
- console.log('Video clicked:', video);
- };
+        loadHomePageData();
+    }, [userId]);
 
- const handleCreatorClick = async (creator: Creator) => {
- try {
+    const handleVideoClick = (video: Video) => {
 
- await fetch('/api/member/profile-visits', {
- method: 'POST',
- headers: {
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify({
- creatorId: creator.id,
- source: 'trending_creators'
- }),
- });
+        console.log('Video clicked:', video);
+    };
 
- window.location.href = `/creator/${creator.username}`;
- } catch (error) {
- console.error('Error tracking profile visit:', error);
+    const handleCreatorClick = async (creator: Creator) => {
+        try {
 
- window.location.href = `/creator/${creator.username}`;
- }
- };
+            await fetch('/api/member/profile-visits', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    creatorId: creator.id,
+                    source: 'trending_creators'
+                }),
+            });
 
- const handleFollowToggle = async (creatorId: string) => {
- try {
+        } catch (error) {
+            console.error('Error tracking profile visit:', error);
+        }
+    };
 
- setFollowingStates(prev => ({ ...prev, [creatorId]: true }));
+    const handleFollowToggle = async (creatorId: string) => {
+        try {
 
- setTrendingCreators(prev => 
- prev.map(creator => 
- creator.id === creatorId 
- ? { ...creator, isFollowing: !creator.isFollowing }
- : creator
- )
- );
+            setFollowingStates(prev => ({ ...prev, [creatorId]: true }));
 
- const response = await fetch('/api/interactions/follow', {
- method: 'POST',
- headers: {
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify({
- creatorId
- }),
- });
+            setTrendingCreators(prev =>
+                prev.map(creator =>
+                    creator.id === creatorId
+                        ? { ...creator, isFollowing: !creator.isFollowing }
+                        : creator
+                )
+            );
 
- const result = await response.json();
+            const response = await fetch('/api/interactions/follow', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    creatorId
+                }),
+            });
 
- if (!response.ok) {
- throw new Error(result.error || 'Failed to update follow status');
- }
+            const result = await response.json();
 
- setTrendingCreators(prev => 
- prev.map(creator => 
- creator.id === creatorId 
- ? { ...creator, isFollowing: result.data.isFollowing }
- : creator
- )
- );
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to update follow status');
+            }
 
- setFollowingStates(prev => ({ ...prev, [creatorId]: false }));
- } catch (error) {
- console.error('Error toggling follow status:', error);
+            setTrendingCreators(prev =>
+                prev.map(creator =>
+                    creator.id === creatorId
+                        ? { ...creator, isFollowing: result.data.isFollowing }
+                        : creator
+                )
+            );
 
- setTrendingCreators(prev => 
- prev.map(creator => 
- creator.id === creatorId 
- ? { ...creator, isFollowing: !creator.isFollowing }
- : creator
- )
- );
+            setFollowingStates(prev => ({ ...prev, [creatorId]: false }));
+        } catch (error) {
+            console.error('Error toggling follow status:', error);
 
- setFollowingStates(prev => ({ ...prev, [creatorId]: false }));
+            setTrendingCreators(prev =>
+                prev.map(creator =>
+                    creator.id === creatorId
+                        ? { ...creator, isFollowing: !creator.isFollowing }
+                        : creator
+                )
+            );
 
- alert('Failed to update follow status. Please try again.');
- }
- };
+            setFollowingStates(prev => ({ ...prev, [creatorId]: false }));
 
- const handleNotifyToggle = (showId: string) => {
- setUpcomingShows(prev =>
- prev.map(show =>
- show.id === showId
- ? { ...show, isNotified: !show.isNotified }
- : show
- )
- );
- };
+            alert('Failed to update follow status. Please try again.');
+        }
+    };
 
- const handleShowClick = (show: UpcomingShow) => {
+    const handleNotifyToggle = (showId: string) => {
+        setUpcomingShows(prev =>
+            prev.map(show =>
+                show.id === showId
+                    ? { ...show, isNotified: !show.isNotified }
+                    : show
+            )
+        );
+    };
 
- console.log('Upcoming show clicked:', show);
- };
+    const handleShowClick = (show: UpcomingShow) => {
 
- const handleCategorySelect = (categoryId: string) => {
- setSelectedCategory(categoryId);
+        console.log('Upcoming show clicked:', show);
+    };
 
- console.log('Category selected:', categoryId);
- };
+    const handleCategorySelect = (categoryId: string) => {
+        setSelectedCategory(categoryId);
 
- const handleOfferClick = (offer: Offer) => {
+        console.log('Category selected:', categoryId);
+    };
 
- console.log('Offer clicked:', offer);
- };
+    const handleOfferClick = (offer: Offer) => {
 
- if (isLoading) {
- return (
- <div className="min-h-screen bg-neutral-gray flex items-center justify-center">
- <div className="bg-neutral-white rounded-lg shadow-sm border border-neutral-light-gray p-8">
- <div className="text-primary-navy text-xl font-semibold">Loading your personalized content...</div>
- </div>
- </div>
- );
- }
+        console.log('Offer clicked:', offer);
+    };
 
- return (
- <div className="min-h-screen bg-neutral-gray">
- {}
- <motion.section 
- initial={{ opacity: 0, y: 20 }}
- animate={{ opacity: 1, y: 0 }}
- className="pt-8 pb-4"
- >
- <div className="container mx-auto px-4 text-center">
- <div className="bg-gradient-to-r from-primary-navy to-accent-dark-pink rounded-2xl p-8 mb-8 shadow-lg">
- <h1 className="text-4xl md:text-5xl font-bold text-neutral-white mb-4">
- Welcome to Your Creative Universe
- </h1>
- <p className="text-xl text-neutral-white/90 max-w-2xl mx-auto">
- Discover amazing content from talented creators around the world
- </p>
- </div>
- </div>
- </motion.section>
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-neutral-gray flex items-center justify-center">
+                <div className="bg-neutral-white rounded-lg shadow-sm border border-neutral-light-gray p-8">
+                    <div className="text-primary-navy text-xl font-semibold">Loading your personalized content...</div>
+                </div>
+            </div>
+        );
+    }
 
- {}
- <FeaturedShowsSection 
- videos={featuredVideos}
- onVideoClick={handleVideoClick}
- />
+    return (
+        <div className="min-h-screen bg-neutral-gray">
+            { }
+            <motion.section
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="pt-8 pb-4"
+            >
+                <div className="container mx-auto px-4 text-center">
+                    <div className="bg-gradient-to-r from-primary-navy to-accent-dark-pink rounded-2xl p-8 mb-8 shadow-lg">
+                        <h1 className="text-4xl md:text-5xl font-bold text-neutral-white mb-4">
+                            Welcome to Your Creative Universe
+                        </h1>
+                        <p className="text-xl text-neutral-white/90 max-w-2xl mx-auto">
+                            Discover amazing content from talented creators around the world
+                        </p>
+                    </div>
+                </div>
+            </motion.section>
 
- {}
- <TrendingCreatorsCarousel
- creators={trendingCreators}
- onCreatorClick={handleCreatorClick}
- onFollowToggle={handleFollowToggle}
- loading={isLoading}
- error={creatorsError}
- followingStates={followingStates}
- />
+            { }
+            <FeaturedShowsSection
+                videos={featuredVideos}
+                onVideoClick={handleVideoClick}
+            />
 
- {}
- <CategoryCarousel
- categories={categories}
- selectedCategory={selectedCategory}
- onCategorySelect={handleCategorySelect}
- />
+            { }
+            <TrendingCreatorsCarousel
+                creators={trendingCreators}
+                onCreatorClick={handleCreatorClick}
+                onFollowToggle={handleFollowToggle}
+                loading={isLoading}
+                error={creatorsError}
+                followingStates={followingStates}
+            />
 
- {}
- <UpcomingShowsSection
- shows={upcomingShows}
- onNotifyToggle={handleNotifyToggle}
- onShowClick={handleShowClick}
- />
+            { }
+            <CategoryCarousel
+                categories={categories}
+                selectedCategory={selectedCategory}
+                onCategorySelect={handleCategorySelect}
+            />
 
- {}
- <HighlightedOffersSection
- offers={offers}
- onOfferClick={handleOfferClick}
- />
- </div>
- );
+            { }
+            <UpcomingShowsSection
+                shows={upcomingShows}
+                onNotifyToggle={handleNotifyToggle}
+                onShowClick={handleShowClick}
+            />
+
+            { }
+            <HighlightedOffersSection
+                offers={offers}
+                onOfferClick={handleOfferClick}
+            />
+        </div>
+    );
 }
