@@ -212,7 +212,7 @@ export default function AppInstall() {
                   iOS App
                 </h2>
 
-                <p className="text-neutral-gray mb-6">
+                <p className="text-gray-800 mb-6">
                   Install Crensa on your iPhone or iPad for quick access and offline features.
                 </p>
 
@@ -259,7 +259,7 @@ export default function AppInstall() {
                   Android App
                 </h2>
 
-                <p className="text-neutral-gray mb-6">
+                <p className="text-gray-800 mb-6">
                   Install Crensa on your Android device for seamless entertainment on the go.
                 </p>
 
@@ -316,7 +316,7 @@ export default function AppInstall() {
                 <h3 className="font-bold text-lg text-primary-navy mb-2">
                   Instant Access
                 </h3>
-                <p className="text-neutral-gray">
+                <p className="text-gray-800">
                   Launch the app instantly from your home screen without opening a browser.
                 </p>
               </div>
@@ -334,7 +334,7 @@ export default function AppInstall() {
                 <h3 className="font-bold text-lg text-primary-navy mb-2">
                   Better Experience
                 </h3>
-                <p className="text-neutral-gray">
+                <p className="text-gray-800">
                   Enjoy an optimized interface designed specifically for mobile devices.
                 </p>
               </div>
@@ -352,7 +352,7 @@ export default function AppInstall() {
                 <h3 className="font-bold text-lg text-primary-navy mb-2">
                   Notifications
                 </h3>
-                <p className="text-neutral-gray">
+                <p className="text-gray-800">
                   Get push notifications for new content and updates from creators you follow.
                 </p>
               </div>
@@ -371,7 +371,7 @@ export default function AppInstall() {
                 <h3 className="font-bold text-lg text-primary-navy mb-4 flex items-center gap-2">
                   <span>📱</span> Safari (iOS)
                 </h3>
-                <ol className="space-y-3 text-neutral-gray">
+                <ol className="space-y-3 text-gray-800">
                   <li className="flex gap-3">
                     <span className="font-bold text-primary-navy">1.</span>
                     <span className="text-accent-pink font-semibold">Open this page in Safari</span>
@@ -396,7 +396,7 @@ export default function AppInstall() {
                 <h3 className="font-bold text-lg text-primary-navy mb-4 flex items-center gap-2">
                   <span>🤖</span> Chrome (Android)
                 </h3>
-                <ol className="space-y-3 text-neutral-gray">
+                <ol className="space-y-3 text-gray-800">
                   <li className="flex gap-3">
                     <span className="font-bold text-primary-navy">1.</span>
                     <span className="text-accent-pink font-semibold">Open in Chrome or default browser</span>
@@ -425,7 +425,7 @@ export default function AppInstall() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-in fade-in zoom-in duration-300">
             <h2 className="text-2xl font-bold text-primary-navy mb-4">{modalContent.title}</h2>
-            <div className="text-neutral-gray mb-6 text-sm md:text-base">
+            <div className="text-gray-800 mb-6 text-sm md:text-base">
               {modalContent.message}
             </div>
             <button
