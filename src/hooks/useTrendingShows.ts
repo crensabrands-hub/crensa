@@ -18,7 +18,9 @@ export function useTrendingShows(limit: number = 20): UseTrendingShowsResult {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/landing/trending-shows?limit=${limit}`);
+      const response = await fetch(`/api/landing/trending-shows?limit=${limit}`, {
+        credentials: 'include'
+    });
  
       if (!response.ok) {
         throw new Error(`Failed to fetch trending shows: ${response.status}`);

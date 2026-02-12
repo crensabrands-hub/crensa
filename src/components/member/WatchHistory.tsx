@@ -36,7 +36,9 @@ export function WatchHistoryComponent({
     const fetchWatchHistory = async () => {
         try {
             setLoading(true);
-            const response = await fetch("/api/member/watch-history");
+            const response = await fetch("/api/member/watch-history", {
+                credentials: 'include'
+            });
 
             if (!response.ok) {
                 throw new Error("Failed to fetch watch history");

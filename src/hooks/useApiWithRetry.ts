@@ -34,7 +34,7 @@ const DEFAULT_CONFIG: Required<Omit<ApiRetryConfig, 'onRetry' | 'onMaxRetriesRea
  baseDelay: 1000,
  maxDelay: 10000,
  backoffMultiplier: 2,
- retryableStatuses: [408, 429, 500, 502, 503, 504],
+ retryableStatuses: [401, 408, 429, 500, 502, 503, 504],
  retryableErrors: ['NetworkError', 'TimeoutError', 'AbortError', 'fetch']
 }
 
@@ -225,7 +225,10 @@ export function useFetchWithRetry<T>(
 ): [ApiState<T>, ApiActions] {
  const apiCall = useCallback(async (): Promise<T> => {
  const finalUrl = typeof url === 'function' ? url() : url
- const response = await fetch(finalUrl, options)
+ const response = await fetch(finalUrl, {
+ ...options,
+ credentials: 'include'
+ })
  
  if (!response.ok) {
  const error = new Error(`HTTP ${response.status}: ${response.statusText}`)

@@ -90,6 +90,7 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
 
  const response = await fetch(`/api/discover/videos?${searchParams}`, {
  signal: abortControllerRef.current.signal,
+ credentials: 'include'
  });
 
  if (!response.ok) {

@@ -14,69 +14,70 @@ interface VisitTrackingState {
 }
 
 export function useProfileVisitTracking(options: UseProfileVisitTrackingOptions = {}) {
- const { autoTrack = false, trackDuration = true } = options;
- const [state, setState] = useState<VisitTrackingState>({
- isTracking: false
- });
+  const { autoTrack = false, trackDuration = true } = options;
+  const [state, setState] = useState<VisitTrackingState>({
+    isTracking: false
+  });
+  
+  const visitStartTime = useRef<number | undefined>(undefined);
+  const currentVisitId = useRef<string | undefined>(undefined);
+
+  const trackVisit = useCallback(async (
+    creatorId: string, 
+    source: 'dashboard' | 'search' | 'recommendation' | 'direct' | 'trending' = 'direct'
+  ) => {
+    setState(prev => ({ ...prev, isTracking: true, error: undefined }));
  
- const visitStartTime = useRef<number | undefined>(undefined);
- const currentVisitId = useRef<string | undefined>(undefined);
+    try {
+      const response = await fetch('/api/member/profile-visits', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          creatorId,
+          source
+        })
+      });
 
- const trackVisit = useCallback(async (
- creatorId: string, 
- source: 'dashboard' | 'search' | 'recommendation' | 'direct' | 'trending' = 'direct'
- ) => {
- setState(prev => ({ ...prev, isTracking: true, error: undefined }));
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to track visit');
+      }
+
+      const visitId = data.data?.visitId;
+      currentVisitId.current = visitId;
  
- try {
- const response = await fetch('/api/member/profile-visits', {
- method: 'POST',
- headers: {
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify({
- creatorId,
- source
- })
- });
+      if (trackDuration) {
+        visitStartTime.current = Date.now();
+      }
 
- const data = await response.json();
+      setState(prev => ({
+        ...prev,
+        isTracking: false,
+        visitId,
+        error: undefined
+      }));
 
- if (!response.ok) {
- throw new Error(data.error || 'Failed to track visit');
- }
+      return { success: true, visitId };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to track visit';
+      setState(prev => ({
+        ...prev,
+        isTracking: false,
+        error: errorMessage
+      }));
 
- const visitId = data.data?.visitId;
- currentVisitId.current = visitId;
- 
- if (trackDuration) {
- visitStartTime.current = Date.now();
- }
+      return { success: false, error: errorMessage };
+    }
+  }, [trackDuration]);
 
- setState(prev => ({
- ...prev,
- isTracking: false,
- visitId,
- error: undefined
- }));
-
- return { success: true, visitId };
- } catch (error) {
- const errorMessage = error instanceof Error ? error.message : 'Failed to track visit';
- setState(prev => ({
- ...prev,
- isTracking: false,
- error: errorMessage
- }));
-
- return { success: false, error: errorMessage };
- }
- }, [trackDuration]);
-
- const endVisit = useCallback(async () => {
- if (!currentVisitId.current || !visitStartTime.current || !trackDuration) {
- return;
- }
+  const endVisit = useCallback(async () => {
+    if (!currentVisitId.current || !visitStartTime.current || !trackDuration) {
+      return;
+    }
 
  const duration = Math.floor((Date.now() - visitStartTime.current) / 1000);
 
@@ -85,16 +86,17 @@ export function useProfileVisitTracking(options: UseProfileVisitTrackingOptions 
  }
 
  try {
- await fetch('/api/member/profile-visits', {
- method: 'PATCH',
- headers: {
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify({
- visitId: currentVisitId.current,
- duration
- })
- });
+    await fetch('/api/member/profile-visits', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        visitId: currentVisitId.current,
+        duration
+      })
+    });
  } catch (error) {
  console.error('Failed to update visit duration:', error);
  }
@@ -170,47 +172,48 @@ export function useVisitHistory(options: {
  setData(prev => ({ ...prev, loading: true, error: undefined, retryable: false }));
 
  try {
- const params = new URLSearchParams();
- if (options.limit) params.set('limit', options.limit.toString());
- if (options.offset) params.set('offset', options.offset.toString());
- if (options.creatorId) params.set('creatorId', options.creatorId);
+    const params = new URLSearchParams();
+    if (options.limit) params.set('limit', options.limit.toString());
+    if (options.offset) params.set('offset', options.offset.toString());
+    if (options.creatorId) params.set('creatorId', options.creatorId);
 
- const controller = new AbortController();
- const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
- const response = await fetch(`/api/member/profile-visits?${params}`, {
- signal: controller.signal,
- headers: {
- 'Content-Type': 'application/json',
- }
- });
+    const response = await fetch(`/api/member/profile-visits?${params}`, {
+      signal: controller.signal,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
 
- clearTimeout(timeoutId);
+    clearTimeout(timeoutId);
 
- const result = await response.json();
+    const result = await response.json();
 
- if (!response.ok) {
- const errorMessage = result.message || result.error || 'Failed to fetch visit history';
- const isRetryable = result.retryable || response.status >= 500 || response.status === 503;
+    if (!response.ok) {
+      const errorMessage = result.message || result.error || 'Failed to fetch visit history';
+      const isRetryable = result.retryable || response.status >= 500 || response.status === 503;
  
- throw new Error(JSON.stringify({
- message: errorMessage,
- retryable: isRetryable,
- status: response.status
- }));
- }
+      throw new Error(JSON.stringify({
+        message: errorMessage,
+        retryable: isRetryable,
+        status: response.status
+      }));
+    }
 
- setRetryCount(0);
- setData({
- visits: result.data.visits || [],
- total: result.data.total || 0,
- hasMore: result.data.hasMore || false,
- loading: false,
- error: undefined,
- retryable: false
- });
+    setRetryCount(0);
+    setData({
+      visits: result.data.visits || [],
+      total: result.data.total || 0,
+      hasMore: result.data.hasMore || false,
+      loading: false,
+      error: undefined,
+      retryable: false
+    });
 
- console.log(`Visit history fetched successfully: ${result.data.visits?.length || 0} visits`);
+    console.log(`Visit history fetched successfully: ${result.data.visits?.length || 0} visits`);
  } catch (error) {
  console.error('Error fetching visit history:', error);
 

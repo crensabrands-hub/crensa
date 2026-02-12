@@ -96,7 +96,10 @@ export default function DiscoverPage({ userId }: DiscoverPageProps) {
                 });
 
                 const response = await fetch(
-                    `/api/discover/videos?${params.toString()}`
+                    `/api/discover/videos?${params.toString()}`,
+                    {
+                        credentials: 'include'
+                    }
                 );
 
                 if (!response.ok) {

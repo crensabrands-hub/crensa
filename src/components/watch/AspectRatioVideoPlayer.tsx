@@ -251,7 +251,7 @@ export const AspectRatioVideoPlayer: React.FC<AspectRatioVideoPlayerProps> = ({
  className="absolute inset-0 w-full h-full object-cover"
  poster={thumbnailUrl}
  autoPlay={autoplay}
- muted={autoplay} // Autoplay requires muted
+ muted={autoplay}
  playsInline
  preload="metadata"
  onClick={togglePlayPause}

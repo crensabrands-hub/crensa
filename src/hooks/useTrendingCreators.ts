@@ -20,7 +20,9 @@ export function useTrendingCreators(limit: number = 10): UseTrendingCreatorsResu
  setLoading(true);
  setError(null);
 
- const response = await fetch(`/api/landing/trending-creators?limit=${limit}`);
+ const response = await fetch(`/api/landing/trending-creators?limit=${limit}`, {
+        credentials: 'include'
+    });
  
  if (!response.ok) {
  throw new Error(`Failed to fetch trending creators: ${response.status}`);

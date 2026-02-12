@@ -66,6 +66,11 @@ export default function RootLayout({
                 <meta name="apple-mobile-web-app-title" content="Crensa" />
                 <link rel="apple-touch-icon" href="/icons/icon-192.png" />
                 <link rel="icon" type="image/png" href="/icons/icon-192.png" />
+                
+                {/* Translation Prevention */}
+                <meta name="google" content="notranslate" />
+                <meta name="robots" content="notranslate" />
+                <meta httpEquiv="Content-Language" content="en" />
 
                 {/* Preload critical assets */}
                 <link rel="preload" href="/images/hero-fallback.svg" as="image" />

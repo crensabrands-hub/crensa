@@ -29,7 +29,9 @@ export function useNotificationCount(): UseNotificationCountReturn {
  setLoading(true);
  setError(null);
 
- const response = await fetch('/api/notifications/unread-count');
+ const response = await fetch('/api/notifications/unread-count', {
+        credentials: 'include'
+    });
  const result = await response.json();
 
  if (!response.ok) {

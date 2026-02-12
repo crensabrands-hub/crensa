@@ -62,6 +62,7 @@ export function VisitHistory({
     const hasMore = apiData?.data?.hasMore || false;
 
     const isRetryable = error ? ApiErrorHandler.isRetryableError(error) : false;
+    const isAuthError = error && (error as any).status === 401;
 
     useEffect(() => {
         if (!isInitialized) {
@@ -161,50 +162,64 @@ export function VisitHistory({
                 )}
                 <div className="text-center py-8">
                     <div className="text-red-500 mb-3 text-2xl">
-                        {isRetryable ? "🔄" : "⚠️"}
+                        {isAuthError ? "🔐" : (isRetryable ? "🔄" : "⚠️")}
                     </div>
                     <h4 className="text-lg font-medium text-gray-900 mb-2">
-                        {isRetryable ? "Connection Issue" : "Unable to Load Visit History"}
+                        {isAuthError ? "Authentication Required" : (isRetryable ? "Connection Issue" : "Unable to Load Visit History")}
                     </h4>
                     <p className="text-gray-600 mb-4 max-w-md mx-auto">
-                        {error?.message || "An unexpected error occurred"}
+                        {isAuthError 
+                            ? "Your session has expired. Please sign in again to continue."
+                            : (error?.message || "An unexpected error occurred")
+                        }
                     </p>
                     <div className="space-y-2">
-                        <button
-                            onClick={handleRetry}
-                            disabled={loading}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {loading ? (
-                                <span className="flex items-center space-x-2">
-                                    <svg
-                                        className="animate-spin h-4 w-4"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <circle
-                                            className="opacity-25"
-                                            cx="12"
-                                            cy="12"
-                                            r="10"
-                                            stroke="currentColor"
-                                            strokeWidth="4"
-                                        ></circle>
-                                        <path
-                                            className="opacity-75"
-                                            fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                        ></path>
-                                    </svg>
-                                    <span>Retrying...</span>
-                                </span>
-                            ) : (
-                                "Try Again"
-                            )}
-                        </button>
+                        {isAuthError ? (
+                            <button
+                                onClick={() => window.location.href = "/sign-in"}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                            >
+                                Sign In Again
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleRetry}
+                                disabled={loading}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {loading ? (
+                                    <span className="flex items-center space-x-2">
+                                        <svg
+                                            className="animate-spin h-4 w-4"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <circle
+                                                className="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                strokeWidth="4"
+                                            ></circle>
+                                            <path
+                                                className="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                            ></path>
+                                        </svg>
+                                        <span>Retrying...</span>
+                                    </span>
+                                ) : (
+                                    "Try Again"
+                                )}
+                            </button>
+                        )}
                         <p className="text-xs text-gray-500">
-                            Having trouble? Check your internet connection or try refreshing
-                            the page.
+                            {isAuthError 
+                                ? "Need help? Contact support if the issue persists."
+                                : "Having trouble? Check your internet connection or try refreshing page."
+                            }
                         </p>
                     </div>
                 </div>

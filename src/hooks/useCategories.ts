@@ -18,7 +18,9 @@ export function useCategories(): UseCategoriesReturn {
  setLoading(true);
  setError(null);
 
- const response = await fetch('/api/landing/categories');
+ const response = await fetch('/api/landing/categories', {
+        credentials: 'include'
+    });
  
  if (!response.ok) {
  throw new Error(`Failed to fetch categories: ${response.status}`);
