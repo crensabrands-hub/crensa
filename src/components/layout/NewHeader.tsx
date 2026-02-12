@@ -57,7 +57,7 @@ export default function NewHeader({ isScrolled: propIsScrolled, alwaysVisible = 
  { label: "Home", href: "/" },
  { label: "Browse", href: "/browse" },
  { label: "Creator", href: "/creator-landing" },
- { label: "App", href: isSignedIn ? (userProfile?.role === "creator" ? "/creator/dashboard" : "/dashboard") : "/sign-up" },
+ { label: "App", href: "/app" },
  ];
 
  return (
