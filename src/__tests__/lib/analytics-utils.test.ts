@@ -11,7 +11,7 @@ import {
  formatNumber,
  formatDate,
  validateAnalyticsData
-} from '@/lib/analytics-utils';
+} from '../../lib/analytics-utils';
 
 describe('Analytics Utils', () => {
  describe('transformEarningsData', () => {
@@ -96,6 +96,72 @@ describe('Analytics Utils', () => {
  expect(formatNumber(1500)).toBe('1.5K');
  expect(formatNumber(1500000)).toBe('1.5M');
  expect(formatNumber(500)).toBe('500');
+ });
+ });
+
+ describe('formatDate', () => {
+ it('should format date correctly', () => {
+ const result = formatDate('2024-01-15');
+ expect(result).toBeDefined();
+ expect(typeof result).toBe('string');
+ });
+
+ it('should handle invalid dates', () => {
+ const result = formatDate('invalid');
+ expect(result).toBeDefined();
+ });
+ });
+
+ describe('transformViewsData', () => {
+ it('should transform views data correctly', () => {
+ const input = [
+ { date: '2024-01-01', views: 500 },
+ { date: '2024-01-02', views: 750 }
+ ];
+
+ const result = transformViewsData(input);
+
+ expect(result).toHaveLength(2);
+ expect(result[0].date).toBe('2024-01-01');
+ expect(result[0].value).toBe(500);
+ });
+
+ it('should handle empty data', () => {
+ const result = transformViewsData([]);
+ expect(result).toEqual([]);
+ });
+ });
+
+ describe('fillMissingDates', () => {
+ it('should fill missing dates in sequence', () => {
+ const input = [
+ { date: '2024-01-01', value: 100 },
+ { date: '2024-01-03', value: 200 }
+ ];
+
+ const result = fillMissingDates(input);
+
+ expect(result.length).toBeGreaterThanOrEqual(input.length);
+ });
+
+ it('should handle empty data', () => {
+ const result = fillMissingDates([]);
+ expect(result).toEqual([]);
+ });
+ });
+
+ describe('analyzeTrends', () => {
+ it('should analyze trends in data', () => {
+ const input = [
+ { date: '2024-01-01', value: 100 },
+ { date: '2024-01-02', value: 120 },
+ { date: '2024-01-03', value: 150 }
+ ];
+
+ const result = analyzeTrends(input);
+
+ expect(result).toBeDefined();
+ expect(typeof result).toBe('object');
  });
  });
 

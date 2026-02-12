@@ -51,12 +51,12 @@ export default function NewHeader({ isScrolled: propIsScrolled, alwaysVisible = 
 
     const homeUrl = getHomeUrl(isSignedIn, userProfile?.role);
 
-    const navigationItems = [
-        { label: "Home", href: "/" },
-        { label: "Browse", href: "/browse" },
-        { label: "Creator", href: "/creator-landing" },
-        { label: "App", href: isSignedIn ? (userProfile?.role === "creator" ? "/creator/dashboard" : "/dashboard") : "/sign-up" },
-    ];
+ const navigationItems = [
+ { label: "Home", href: "/" },
+ { label: "Browse", href: "/browse" },
+ { label: "Creator", href: "/creator-landing" },
+ { label: "App", href: isSignedIn ? (userProfile?.role === "creator" ? "/creator/dashboard" : "/dashboard") : "/sign-up" },
+ ];
 
     return (
         <>
@@ -89,7 +89,6 @@ export default function NewHeader({ isScrolled: propIsScrolled, alwaysVisible = 
                             </span>
                         </Link>
 
-                        {}
                         <nav className="hidden md:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2">
                             {navigationItems.map((item) => (
                                 <Link
@@ -103,7 +102,6 @@ export default function NewHeader({ isScrolled: propIsScrolled, alwaysVisible = 
                             ))}
                         </nav>
 
-                        {}
                         <div className="hidden md:flex items-center space-x-4">
                             {isLoading ? (
                                 <div className="w-8 h-8 animate-spin rounded-full border-2 border-accent-pink/20 border-t-accent-pink"></div>

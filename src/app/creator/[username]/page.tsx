@@ -309,11 +309,16 @@ export default async function CreatorProfilePage({
                             <p className="text-neutral-dark-gray font-bold uppercase tracking-[0.22em] text-[10px] mb-3">
                                 {stat.label}
                             </p>
-                            <h3 className="text-4xl font-bold text-primary-navy">{stat.value}</h3>
+                            <h3
+                                className={`text-4xl font-bold text-primary-navy ${stat.label === 'Est. Earnings' ? 'blur-md select-none' : ''}`}
+                                aria-label={stat.label === 'Est. Earnings' ? 'Estimated earnings hidden' : undefined}
+                            >
+                                {stat.value}
+                            </h3>
                         </div>
                     ))}
-                </div>
 
+                </div>
                 {creatorData.socialLinks && creatorData.socialLinks.length > 0 && (
                     <section className="bg-white p-10 rounded-[2.5rem] border border-neutral-light-gray shadow-sm space-y-8">
                         <div className="flex items-center justify-between border-b border-neutral-light-gray pb-6">
