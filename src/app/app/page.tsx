@@ -134,7 +134,7 @@ export default function AppInstall() {
     if (!isInstallable || !deferredPrompt) {
       setModalContent({
         title: "Install Not Available",
-        message: "Install option not available. Make sure HTTPS, a valid service worker, and manifest are configured."
+        message: "App Already Installed or Installation Not Supported. Please use Chrome on Android to install the app."
       });
       setShowModal(true);
       return;
