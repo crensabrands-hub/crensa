@@ -329,8 +329,31 @@ export class IdentifierResolutionService {
 
  private async determineVideoAccess(videoId: string, userId?: string, creatorId?: string): Promise<AccessInfo> {
  try {
+ // Get video details to check if it's free
+ const videoDetails = await db
+ .select({ 
+ creditCost: videos.creditCost,
+ coinPrice: videos.coinPrice
+ })
+ .from(videos)
+ .where(eq(videos.id, videoId))
+ .limit(1);
 
+ const video = videoDetails[0];
+ const coinPrice = video?.coinPrice ?? parseFloat(video?.creditCost || '0');
+
+ // If no user, check if video is free
  if (!userId) {
+ // Free videos (coin_price === 0) can be accessed by guests
+ if (coinPrice === 0) {
+ return {
+ hasAccess: true,
+ accessType: 'requires_purchase', // Keep this for compatibility
+ requiresPurchase: false // But don't require purchase for free videos
+ };
+ }
+ 
+ // Paid videos require authentication
  return {
  hasAccess: false,
  accessType: 'requires_purchase',
@@ -390,6 +413,15 @@ export class IdentifierResolutionService {
  }
  }
 
+ // For authenticated users, check if video is free
+ if (coinPrice === 0) {
+ return {
+ hasAccess: true,
+ accessType: 'requires_purchase',
+ requiresPurchase: false
+ };
+ }
+
  return {
  hasAccess: false,
  accessType: 'requires_purchase',
@@ -407,6 +439,18 @@ export class IdentifierResolutionService {
 
  private async determineTokenAccess(videoId: string, userId?: string, creatorId?: string, shareToken?: string): Promise<AccessInfo> {
  try {
+ // Get video details to check if it's free
+ const videoDetails = await db
+ .select({ 
+ creditCost: videos.creditCost,
+ coinPrice: videos.coinPrice
+ })
+ .from(videos)
+ .where(eq(videos.id, videoId))
+ .limit(1);
+
+ const video = videoDetails[0];
+ const coinPrice = video?.coinPrice ?? parseFloat(video?.creditCost || '0');
 
  if (userId && creatorId && userId === creatorId) {
  return {
@@ -464,6 +508,16 @@ export class IdentifierResolutionService {
  };
  }
  }
+ }
+
+ // Check if video is free - both guests and authenticated users can access
+ if (coinPrice === 0) {
+ return {
+ hasAccess: true,
+ accessType: 'token_preview',
+ shareToken,
+ requiresPurchase: false
+ };
  }
 
  return {

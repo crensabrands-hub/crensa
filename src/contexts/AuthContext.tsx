@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useUser, useAuth } from '@clerk/nextjs';
 import type { UserResource } from '@clerk/types';
+import { resetGuestWatchCount } from '@/lib/utils/guestAccess';
 
 export type UserRole = 'creator' | 'member';
 
@@ -315,6 +316,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  }));
 
  if (isSignedIn && user) {
+ // Reset guest watch counter on successful login
+ resetGuestWatchCount();
  loadUserProfile();
  } else if (!isSignedIn) {
 

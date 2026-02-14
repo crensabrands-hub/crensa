@@ -6,6 +6,12 @@ import { useAuth } from '@clerk/nextjs';
 import { UnifiedVideoPlayer } from '@/components/watch/UnifiedVideoPlayer';
 import WatchErrorBoundary from './WatchErrorBoundary';
 import LoadingFallback from './components/LoadingFallback';
+import GuestAccessModal from '@/components/watch/GuestAccessModal';
+import {
+  canGuestWatchFreeVideo,
+  incrementGuestWatchCount,
+  getGuestWatchCount,
+} from '@/lib/utils/guestAccess';
 
 interface VideoData {
     id: string;
@@ -50,12 +56,14 @@ interface UnifiedWatchClientProps {
 
 export default function UnifiedWatchClient({ identifier }: UnifiedWatchClientProps) {
     const router = useRouter();
-    const { userId } = useAuth();
+    const { userId, isSignedIn } = useAuth();
     const [data, setData] = useState<WatchData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [statusCode, setStatusCode] = useState<number | undefined>();
     const [identifierType, setIdentifierType] = useState<'video_id' | 'share_token' | null>(null);
+    const [showGuestModal, setShowGuestModal] = useState(false);
+    const [guestAccessChecked, setGuestAccessChecked] = useState(false);
 
     const fetchWatchData = useCallback(async () => {
         try {
@@ -105,6 +113,45 @@ export default function UnifiedWatchClient({ identifier }: UnifiedWatchClientPro
         fetchWatchData();
     }, [fetchWatchData]);
 
+    // Check guest access after video data is loaded
+    useEffect(() => {
+        if (!data || guestAccessChecked) return;
+
+        // Only check for guests (not authenticated)
+        if (isSignedIn) {
+            setGuestAccessChecked(true);
+            return;
+        }
+
+        // Get coin price from video data (use coinPrice if available, otherwise creditCost)
+        const coinPrice = data.video.coinPrice ?? data.video.creditCost ?? 0;
+
+        // Only apply to free videos (coin_price = 0)
+        if (coinPrice !== 0) {
+            setGuestAccessChecked(true);
+            return;
+        }
+
+        // Check if guest can watch this free video
+        const canWatch = canGuestWatchFreeVideo(false, coinPrice);
+
+        if (!canWatch) {
+            // Guest has exhausted free watches - show modal
+            setShowGuestModal(true);
+            setGuestAccessChecked(true);
+        } else {
+            // Guest can watch - increment counter
+            incrementGuestWatchCount();
+            setGuestAccessChecked(true);
+        }
+    }, [data, isSignedIn, guestAccessChecked]);
+
+    const handleCloseGuestModal = () => {
+        setShowGuestModal(false);
+        // Redirect to homepage
+        router.push('/');
+    };
+
     const handleRetry = () => {
         fetchWatchData();
     };
@@ -144,26 +191,36 @@ export default function UnifiedWatchClient({ identifier }: UnifiedWatchClientPro
 
     return (
         <div className="min-h-screen bg-black">
-            <UnifiedVideoPlayer
-                video={{
-                    ...data.video,
-                    videoUrl: data.video.videoUrl || ''
-                }}
-                access={{
-                    hasAccess: data.hasAccess,
-                    accessType: data.accessType as any,
-                    shareToken: data.shareToken,
-                    requiresPurchase: data.requiresPurchase
-                }}
-                identifierType={identifierType || 'video_id'}
-                onAccessGranted={() => {
-
-                    fetchWatchData();
-                }}
-                onError={(error) => {
-                    setError(error);
-                }}
+            {/* Guest Access Modal */}
+            <GuestAccessModal
+                isOpen={showGuestModal}
+                onClose={handleCloseGuestModal}
+                videoTitle={data.video.title}
             />
+
+            {/* Only show video player if guest access is allowed */}
+            {!showGuestModal && (
+                <UnifiedVideoPlayer
+                    video={{
+                        ...data.video,
+                        videoUrl: data.video.videoUrl || ''
+                    }}
+                    access={{
+                        hasAccess: data.hasAccess,
+                        accessType: data.accessType as any,
+                        shareToken: data.shareToken,
+                        requiresPurchase: data.requiresPurchase
+                    }}
+                    identifierType={identifierType || 'video_id'}
+                    onAccessGranted={() => {
+
+                        fetchWatchData();
+                    }}
+                    onError={(error) => {
+                        setError(error);
+                    }}
+                />
+            )}
         </div>
     );
 }
