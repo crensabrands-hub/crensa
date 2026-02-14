@@ -124,7 +124,7 @@ export default function UnifiedWatchClient({ identifier }: UnifiedWatchClientPro
         }
 
         // Get coin price from video data (use coinPrice if available, otherwise creditCost)
-        const coinPrice = data.video.coinPrice ?? data.video.creditCost ?? 0;
+        const coinPrice = data.video.creditCost ?? 0;
 
         // Only apply to free videos (coin_price = 0)
         if (coinPrice !== 0) {
