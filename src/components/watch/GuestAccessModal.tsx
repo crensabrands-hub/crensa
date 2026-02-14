@@ -80,7 +80,7 @@ export default function GuestAccessModal({
                 Free Video Limit Reached
               </h2>
               <p className="text-white text-opacity-90 text-sm">
-                You've watched your 2 free videos
+                You have watched your 2 free videos
               </p>
             </div>
 
@@ -141,7 +141,7 @@ export default function GuestAccessModal({
 
               {/* Footer Note */}
               <p className="text-xs text-gray-500 text-center mt-4">
-                It's free to join and takes less than a minute
+                It is free to join and takes less than a minute
               </p>
             </div>
           </motion.div>
