@@ -1,3 +1,22 @@
+import { Metadata } from 'next';
+import { createPageMetadata } from '@/lib/seo/metadata';
+import { SchemaRenderer } from '@/components/schema/SchemaRenderer';
+import { getOrganizationSchema, getBreadcrumbSchema } from '@/lib/seo/schema';
+
+export const metadata: Metadata = createPageMetadata(
+  'About Crensa - Our Story & Mission',
+  'Learn about Crensa, our mission to empower content creators, and how we are building the future of video monetization.',
+  [
+    'about crensa',
+    'creator platform',
+    'video monetization company',
+    'creator economy',
+    'digital content platform',
+  ],
+  '/about',
+  'https://crensa.com/og-image-about.png'
+);
+
 'use client';
 
 import React from 'react';

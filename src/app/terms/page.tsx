@@ -1,3 +1,20 @@
+import { Metadata } from 'next';
+import { createPageMetadata } from '@/lib/seo/metadata';
+
+export const metadata: Metadata = createPageMetadata(
+  'Terms of Service - Crensa',
+  'Review Crensa\'s Terms of Service. Understand the rules, rights, and responsibilities for using our video platform and monetization services.',
+  [
+    'terms of service',
+    'terms of use',
+    'user agreement',
+    'platform terms',
+    'service terms',
+  ],
+  '/terms',
+  'https://crensa.com/og-image-terms.png'
+);
+
 'use client';
 
 import React from 'react';

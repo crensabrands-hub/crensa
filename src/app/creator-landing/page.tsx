@@ -1,4 +1,30 @@
+import { Metadata } from "next";
+import { createPageMetadata } from "@/lib/seo/metadata";
+import { SchemaRenderer } from "@/components/schema/SchemaRenderer";
+import { getCreatorPlatformSchema } from "@/lib/seo/schema";
+
+export const metadata: Metadata = createPageMetadata(
+  "Monetise Video Content | Pay Per View Platform For Creators | Creator Monetisation India | Crensa",
+  "Join India's top pay-per-view creator platform. Monetise your video content and earn money directly from viewers. Retain full video IP ownership. Zero performance fees.",
+  [
+    "monetise video content",
+    "pay per view platform for creators",
+    "creator monetisation India",
+    "video IP ownership",
+    "earn money from videos India",
+    "creator platform pay per view",
+    "video monetisation platform",
+    "creator earnings platform",
+    "short video monetisation",
+    "content creator platform India",
+  ],
+  "/creator-landing",
+  "https://crensa.com/og-image-creator.png"
+);
+
 "use client";
+
+// Note: Schema will be rendered in head via layout component
 
 import NewHeader from "@/components/layout/NewHeader";
 import { Footer } from "@/components/layout";

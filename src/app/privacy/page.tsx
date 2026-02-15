@@ -1,3 +1,20 @@
+import { Metadata } from 'next';
+import { createPageMetadata } from '@/lib/seo/metadata';
+
+export const metadata: Metadata = createPageMetadata(
+  'Privacy Policy - Crensa',
+  'Read Crensa\'s privacy policy. Learn how we collect, use, protect, and manage your data. Your privacy is important to us.',
+  [
+    'privacy policy',
+    'data privacy',
+    'user privacy',
+    'privacy protection',
+    'data protection',
+  ],
+  '/privacy',
+  'https://crensa.com/og-image-privacy.png'
+);
+
 'use client';
 
 import React from 'react';

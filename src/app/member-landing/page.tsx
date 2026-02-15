@@ -1,4 +1,31 @@
+import { Metadata } from 'next';
+import { createPageMetadata } from '@/lib/seo/metadata';
+import { SchemaRenderer } from '@/components/schema/SchemaRenderer';
+import { getOTTPlatformSchema } from '@/lib/seo/schema';
+
+export const metadata: Metadata = createPageMetadata(
+  "Watch Short OTT Platform | Mini Web Series | Pay Per View Streaming App India | Crensa",
+  "Watch exclusive mini web series, short films and OTT content in India. Pay-per-view streaming platform with premium short content. Support creators directly.",
+  [
+    'short OTT platform',
+    'watch mini web series',
+    'pay per view streaming app',
+    'exclusive short films India',
+    'short content streaming',
+    'mini web series platform',
+    'OTT platform India',
+    'web series watch online',
+    'short films streaming',
+    'premium short content',
+    'episodic content platform',
+  ],
+  '/member-landing',
+  'https://crensa.com/og-image-member.png'
+);
+
 'use client';
+
+// Note: Schema will be rendered in head via layout component
 
 import { ContentErrorBoundary } from "@/components/ContentErrorBoundary";
 import NewHeader from "@/components/layout/NewHeader";

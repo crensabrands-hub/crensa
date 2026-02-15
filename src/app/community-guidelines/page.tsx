@@ -1,3 +1,20 @@
+import { Metadata } from 'next';
+import { createPageMetadata } from '@/lib/seo/metadata';
+
+export const metadata: Metadata = createPageMetadata(
+  'Community Guidelines - Crensa',
+  'Learn about Crensa\'s community guidelines. Understand what content is allowed, community standards, and how we keep Crensa a safe platform for all creators and viewers.',
+  [
+    'community guidelines',
+    'content guidelines',
+    'community standards',
+    'platform rules',
+    'content policy',
+  ],
+  '/community-guidelines',
+  'https://crensa.com/og-image-guidelines.png'
+);
+
 'use client';
 
 import React from 'react';
