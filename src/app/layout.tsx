@@ -46,7 +46,6 @@ export default function RootLayout({
 
                 {/* Verification Tags - Replace with your actual verification tokens */}
                 <meta name="google-site-verification" content="YOUR_GOOGLE_VERIFICATION_CODE" />
-                <meta name="msvalidate.01" content="YOUR_BING_VERIFICATION_CODE" />
 
                 {/* PWA Meta Tags */}
                 <meta name="theme-color" content="#000000" />

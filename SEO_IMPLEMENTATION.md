@@ -83,14 +83,11 @@ export const TWITTER_HANDLE = "@CrensaPlatform";
 In `src/app/layout.tsx`, replace:
 ```html
 <meta name="google-site-verification" content="YOUR_GOOGLE_VERIFICATION_CODE" />
-<meta name="msvalidate.01" content="YOUR_BING_VERIFICATION_CODE" />
 ```
 
 **Actions:**
 1. Go to [Google Search Console](https://search.google.com/search-console)
 2. Add your property and get the verification code
-3. Go to [Bing Webmaster Tools](https://www.bing.com/webmasters)
-4. Add your property and get the verification code
 
 ### 3. Generate Open Graph Images
 Create OG images and place in `public/` folder:
