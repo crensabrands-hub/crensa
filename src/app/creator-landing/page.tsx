@@ -22,7 +22,6 @@ export const metadata: Metadata = createPageMetadata(
   "https://crensa.com/og-image-creator.png"
 );
 
-"use client";
 
 // Note: Schema will be rendered in head via layout component
 

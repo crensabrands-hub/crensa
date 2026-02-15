@@ -17,7 +17,6 @@ export const metadata: Metadata = createPageMetadata(
   'https://crensa.com/og-image-about.png'
 );
 
-'use client';
 
 import React from 'react';
 import Link from 'next/link';

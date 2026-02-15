@@ -23,8 +23,6 @@ export const metadata: Metadata = createPageMetadata(
   'https://crensa.com/og-image-member.png'
 );
 
-'use client';
-
 // Note: Schema will be rendered in head via layout component
 
 import { ContentErrorBoundary } from "@/components/ContentErrorBoundary";
