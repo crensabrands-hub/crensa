@@ -61,13 +61,13 @@ export const baseMetadata: Metadata = {
         alt: SITE_NAME,
         type: "image/png",
       },
-      {
-        url: `${SITE_URL}/og-image-square.png`,
-        width: 800,
-        height: 800,
-        alt: SITE_NAME,
-        type: "image/png",
-      },
+      // {
+      //   url: `${SITE_URL}/og-image-square.png`,
+      //   width: 800,
+      //   height: 800,
+      //   alt: SITE_NAME,
+      //   type: "image/png",
+      // },
     ],
   },
   twitter: {
@@ -75,7 +75,7 @@ export const baseMetadata: Metadata = {
     title: `${SITE_NAME} - Monetize Your Short Videos`,
     description: SITE_DESCRIPTION,
     creator: TWITTER_HANDLE,
-    images: [`${SITE_URL}/twitter-image.png`],
+    images: [`${SITE_URL}/og-image.png`],
   },
   alternates: {
     canonical: SITE_URL,

@@ -87,7 +87,7 @@ export const CREATOR_LANDING_SEO_INDIA = {
   ogTitle: "Monetise Video Content with Pay Per View Platform | Crensa India",
   ogDescription:
     "Earn money from your videos. Creator platform with pay-per-view model. Keep your video IP ownership in India.",
-  ogImage: "https://crensa.com/og-image-creator.png",
+  ogImage: "https://crensa.com/og-image.png",
 };
 
 /**
@@ -101,7 +101,7 @@ export const VIEWER_LANDING_SEO_INDIA = {
   ogTitle: "Premium Short OTT & Web Series | Watch Pay Per View | Crensa India",
   ogDescription:
     "Exclusive mini web series and short films. Premium OTT content. Support creators directly.",
-  ogImage: "https://crensa.com/og-image-member.png",
+  ogImage: "https://crensa.com/og-image.png",
 };
 
 /**
