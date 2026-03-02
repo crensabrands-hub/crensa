@@ -3,86 +3,95 @@
 import NewHeader from "@/components/layout/NewHeader";
 import { Footer } from "@/components/layout";
 import {
- HeroSection,
- FeatureSection,
- WhyJoinNowSection,
- HowItWorksSection,
- TestimonialsSection,
- FAQSection,
+    HeroSection,
+    FeatureSection,
+    WhyJoinNowSection,
+    HowItWorksSection,
+    TestimonialsSection,
+    FAQSection,
 } from "@/components/sections";
 import { getLandingPageContent } from "@/lib/content-config";
 import { ContentErrorBoundary } from "@/components/ContentErrorBoundary";
 
 export default function CreatorLanding() {
- const landingPageContent = getLandingPageContent();
+    const landingPageContent = getLandingPageContent();
 
- return (
- <div className="min-h-screen bg-white">
- <ContentErrorBoundary sectionName="header">
- <NewHeader />
- </ContentErrorBoundary>
+    // Customize footer content for creator landing page only
+    const creatorFooterContent = {
+        ...landingPageContent.footer,
+        finalCta: {
+            ...landingPageContent.footer.finalCta,
+            title: 'Ready to Start Earning?'
+        }
+    };
 
- <main id="main-content" className="min-h-screen pt-16 md:pt-20">
- {}
- <ContentErrorBoundary sectionName="hero">
- <HeroSection content={landingPageContent.hero} />
- </ContentErrorBoundary>
+    return (
+        <div className="min-h-screen bg-white">
+            <ContentErrorBoundary sectionName="header">
+                <NewHeader />
+            </ContentErrorBoundary>
 
- {}
- <div id="why-crensa">
- <ContentErrorBoundary sectionName="why-crensa">
- <FeatureSection
- title={landingPageContent.whyCrensa.title}
- subtitle={landingPageContent.whyCrensa.subtitle}
- features={landingPageContent.whyCrensa.features}
- />
- </ContentErrorBoundary>
- </div>
+            <main id="main-content" className="min-h-screen pt-16 md:pt-20">
+                { }
+                <ContentErrorBoundary sectionName="hero">
+                    <HeroSection content={landingPageContent.hero} />
+                </ContentErrorBoundary>
 
- {}
- <ContentErrorBoundary sectionName="why-join-now">
- <WhyJoinNowSection
- title={landingPageContent.whyJoinNow.title}
- benefits={landingPageContent.whyJoinNow.benefits}
- ctaText={landingPageContent.whyJoinNow.ctaText}
- ctaLink={landingPageContent.whyJoinNow.ctaLink}
- />
- </ContentErrorBoundary>
+                { }
+                <div id="why-crensa">
+                    <ContentErrorBoundary sectionName="why-crensa">
+                        <FeatureSection
+                            title={landingPageContent.whyCrensa.title}
+                            subtitle={landingPageContent.whyCrensa.subtitle}
+                            features={landingPageContent.whyCrensa.features}
+                        />
+                    </ContentErrorBoundary>
+                </div>
 
- {}
- <div id="how-it-works">
- <ContentErrorBoundary sectionName="how-it-works">
- <HowItWorksSection
- title={landingPageContent.howItWorks.title}
- steps={landingPageContent.howItWorks.steps}
- />
- </ContentErrorBoundary>
- </div>
+                { }
+                <ContentErrorBoundary sectionName="why-join-now">
+                    <WhyJoinNowSection
+                        title={landingPageContent.whyJoinNow.title}
+                        benefits={landingPageContent.whyJoinNow.benefits}
+                        ctaText={landingPageContent.whyJoinNow.ctaText}
+                        ctaLink={landingPageContent.whyJoinNow.ctaLink}
+                    />
+                </ContentErrorBoundary>
 
- {}
- <div id="testimonials">
- <ContentErrorBoundary sectionName="testimonials">
- <TestimonialsSection
- title={landingPageContent.testimonials.title}
- testimonials={landingPageContent.testimonials.items}
- />
- </ContentErrorBoundary>
- </div>
+                { }
+                <div id="how-it-works">
+                    <ContentErrorBoundary sectionName="how-it-works">
+                        <HowItWorksSection
+                            title={landingPageContent.howItWorks.title}
+                            steps={landingPageContent.howItWorks.steps}
+                        />
+                    </ContentErrorBoundary>
+                </div>
 
- {}
- <div id="faq">
- <ContentErrorBoundary sectionName="faq">
- <FAQSection
- title={landingPageContent.faq.title}
- faqs={landingPageContent.faq.items}
- />
- </ContentErrorBoundary>
- </div>
- </main>
+                { }
+                <div id="testimonials">
+                    <ContentErrorBoundary sectionName="testimonials">
+                        <TestimonialsSection
+                            title={landingPageContent.testimonials.title}
+                            testimonials={landingPageContent.testimonials.items}
+                        />
+                    </ContentErrorBoundary>
+                </div>
 
- <ContentErrorBoundary sectionName="footer">
- <Footer content={landingPageContent.footer} />
- </ContentErrorBoundary>
- </div>
- );
+                { }
+                <div id="faq">
+                    <ContentErrorBoundary sectionName="faq">
+                        <FAQSection
+                            title={landingPageContent.faq.title}
+                            faqs={landingPageContent.faq.items}
+                        />
+                    </ContentErrorBoundary>
+                </div>
+            </main>
+
+            <ContentErrorBoundary sectionName="footer">
+                <Footer content={creatorFooterContent} />
+            </ContentErrorBoundary>
+        </div>
+    );
 }

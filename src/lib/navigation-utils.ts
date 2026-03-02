@@ -1,5 +1,3 @@
-
-
 import type { UserRole } from "@/contexts/AuthContext";
 
 export function getHomeUrl(
@@ -169,12 +167,16 @@ export function getNavigationContext(
                 { label: "Dashboard", href: "/dashboard", active: false },
                 { label: "Profile", href: "/profile", active: true },
             ];
-        } else if (pathname.startsWith("/settings")) {
+        } else if (
+            pathname.startsWith("/settings") ||
+            pathname.startsWith("/member/settings") ||
+            pathname.startsWith("/preferences")
+        ) {
             context.section = "account";
             context.title = "Settings";
             context.breadcrumbs = [
                 { label: "Dashboard", href: "/dashboard", active: false },
-                { label: "Settings", href: "/settings", active: true },
+                { label: "Settings", href: "/preferences", active: true },
             ];
         } else if (pathname.startsWith("/help")) {
             context.section = "support";
