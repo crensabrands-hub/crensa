@@ -104,6 +104,8 @@ export default async function SeriesDetailPage({ params }: SeriesDetailPageProps
  seriesId: seriesVideos.seriesId,
  videoId: seriesVideos.videoId,
  orderIndex: seriesVideos.orderIndex,
+ accessType: seriesVideos.accessType,
+ individualCoinPrice: seriesVideos.individualCoinPrice,
  createdAt: seriesVideos.createdAt,
  videoTitle: videos.title,
  videoDescription: videos.description,
@@ -189,6 +191,8 @@ export default async function SeriesDetailPage({ params }: SeriesDetailPageProps
  seriesId: sv.seriesId,
  videoId: sv.videoId,
  orderIndex: sv.orderIndex,
+ accessType: sv.accessType || 'series-only',
+ individualCoinPrice: sv.individualCoinPrice || 0,
  createdAt: sv.createdAt,
  video: {
  id: sv.videoId,

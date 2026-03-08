@@ -61,7 +61,7 @@ function CreatorSeriesEditContent() {
  };
 
  const handleVideoAdded = (videoId: string) => {
-
+ // Refresh videos list
  const loadVideos = async () => {
  try {
  const response = await fetch(`/api/series/${seriesId}/videos`);
@@ -81,7 +81,23 @@ function CreatorSeriesEditContent() {
  };
 
  const handleOrderChanged = (videoId: string, newOrder: number) => {
+ // Refresh videos list
+ const loadVideos = async () => {
+ try {
+ const response = await fetch(`/api/series/${seriesId}/videos`);
+ if (response.ok) {
+ const data = await response.json();
+ setSeriesVideos(data.videos || []);
+ }
+ } catch (error) {
+ console.error("Failed to refresh videos:", error);
+ }
+ };
+ loadVideos();
+ };
 
+ const handleAccessTypeChanged = (videoId: string, accessType: string, coinPrice?: number) => {
+ // Refresh videos list
  const loadVideos = async () => {
  try {
  const response = await fetch(`/api/series/${seriesId}/videos`);
@@ -174,6 +190,7 @@ function CreatorSeriesEditContent() {
  onVideoAdded={handleVideoAdded}
  onVideoRemoved={handleVideoRemoved}
  onOrderChanged={handleOrderChanged}
+ onAccessTypeChanged={handleAccessTypeChanged}
  />
  )}
  </div>

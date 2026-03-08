@@ -12,6 +12,8 @@ interface SeriesVideo {
  seriesId: string;
  videoId: string;
  orderIndex: number;
+ accessType: 'free' | 'paid' | 'series-only';
+ individualCoinPrice: number;
  createdAt: Date;
  video: {
  id: string;
@@ -119,6 +121,53 @@ export default function SeriesDetailClient({
  return;
  }
 
+ // If series is free, don't show purchase modal
+ if (series.coinPrice === 0) {
+ return;
+ }
+
+ setShowPurchaseModal(true);
+ };
+
+ const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+ const currentVideo = series.videos[currentVideoIndex]?.video;
+
+ const handleVideoSelect = async (index: number) => {
+ const seriesVideo = series.videos[index];
+ if (!seriesVideo) return;
+
+ // Check if video is free - anyone can watch
+ if (seriesVideo.accessType === 'free') {
+ if (!isAuthenticated) {
+ router.push('/sign-in');
+ return;
+ }
+ // Free videos can be watched directly
+ router.push(`/watch/${seriesVideo.video.id}`);
+ return;
+ }
+
+ // If user has series access, they can watch any video
+ if (hasAccess) {
+ setCurrentVideoIndex(index);
+ return;
+ }
+
+ // For paid or series-only videos without access
+ if (seriesVideo.accessType === 'paid') {
+ // TODO: Show individual video purchase modal
+ // For now, redirect to watch page which will handle the purchase
+ router.push(`/watch/${seriesVideo.video.id}`);
+ return;
+ }
+
+ // Series-only videos require series purchase
+ if (series.coinPrice === 0) {
+ // Free series - just navigate
+ router.push(`/watch/${seriesVideo.video.id}`);
+ return;
+ }
+
  setShowPurchaseModal(true);
  };
 
@@ -130,7 +179,17 @@ export default function SeriesDetailClient({
  <div className="lg:col-span-2 space-y-6">
  {}
  <div className="aspect-video bg-neutral-light-gray rounded-lg relative overflow-hidden">
- {series.thumbnailUrl ? (
+ {hasAccess && currentVideo ? (
+ <video
+ key={currentVideo.id}
+ controls
+ className="w-full h-full"
+ poster={currentVideo.thumbnailUrl}
+ >
+ <source src={currentVideo.videoUrl} type="video/mp4" />
+ Your browser does not support the video tag.
+ </video>
+ ) : series.thumbnailUrl ? (
  <Image
  src={series.thumbnailUrl}
  alt={series.title}
@@ -143,7 +202,7 @@ export default function SeriesDetailClient({
  )}
 
  {}
- {!hasAccess && (
+ {!hasAccess && series.coinPrice > 0 && (
  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
  <div className="text-center text-white">
  <motion.div
@@ -165,8 +224,34 @@ export default function SeriesDetailClient({
  )}
 
  {}
+ {!hasAccess && series.coinPrice === 0 && (
+ <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+ <div className="text-center text-white">
+ <motion.div
+ className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4"
+ whileHover={{ scale: 1.05 }}
+ >
+ <Play className="w-10 h-10" fill="white" />
+ </motion.div>
+ <h3 className="text-xl font-semibold mb-2">Free Series</h3>
+ <p className="text-white/80 mb-4">
+ {isAuthenticated ? 'Click any video to start watching' : 'Sign in to watch this free series'}
+ </p>
+ {!isAuthenticated && (
+ <button
+ onClick={() => router.push('/sign-in')}
+ className="px-6 py-3 bg-primary-neon-yellow text-primary-navy font-semibold rounded-lg hover:bg-primary-light-yellow transition-colors"
+ >
+ Sign In to Watch
+ </button>
+ )}
+ </div>
+ </div>
+ )}
+
+ {}
  {hasAccess && accessType === 'series_purchase' && (
- <div className="absolute top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg font-semibold flex items-center space-x-2">
+ <div className="absolute top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg font-semibold flex items-center space-x-2" style={{ display: 'none' }}>
  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
  <path
  fillRule="evenodd"
@@ -183,8 +268,15 @@ export default function SeriesDetailClient({
  <div className="space-y-4">
  {}
  <h1 className="text-3xl lg:text-4xl font-bold text-primary-navy">
- {series.title}
+ {hasAccess && currentVideo ? currentVideo.title : series.title}
  </h1>
+
+ {}
+ {hasAccess && currentVideo && (
+ <p className="text-neutral-dark-gray">
+ Video {currentVideoIndex + 1} of {series.videos.length}
+ </p>
+ )}
 
  {}
  <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-dark-gray">
@@ -238,9 +330,11 @@ export default function SeriesDetailClient({
  {}
  {series.description && (
  <div>
- <h3 className="font-semibold text-primary-navy mb-2">About this series</h3>
+ <h3 className="font-semibold text-primary-navy mb-2">
+ {hasAccess && currentVideo ? 'Video Description' : 'About this series'}
+ </h3>
  <p className="text-neutral-dark-gray leading-relaxed whitespace-pre-wrap">
- {series.description}
+ {hasAccess && currentVideo ? currentVideo.description || series.description : series.description}
  </p>
  </div>
  )}
@@ -303,6 +397,37 @@ export default function SeriesDetailClient({
  </p>
  </div>
  </div>
+ ) : series.coinPrice === 0 ? (
+ <div>
+ <div className="flex items-center justify-center mb-4">
+ <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center">
+ <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+ <path
+ fillRule="evenodd"
+ d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+ clipRule="evenodd"
+ />
+ </svg>
+ </div>
+ </div>
+ <h3 className="text-center font-semibold text-primary-navy mb-2">Free Series</h3>
+ <p className="text-center text-sm text-neutral-dark-gray mb-4">
+ This series is completely free to watch
+ </p>
+ <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+ <p className="text-sm text-green-800 text-center">
+ {isAuthenticated ? 'Click any video to start watching!' : 'Sign in to start watching'}
+ </p>
+ </div>
+ {!isAuthenticated && (
+ <button
+ onClick={() => router.push('/sign-in')}
+ className="w-full mt-4 px-6 py-3 bg-primary-neon-yellow text-primary-navy font-semibold rounded-lg hover:bg-primary-light-yellow transition-colors"
+ >
+ Sign In to Watch
+ </button>
+ )}
+ </div>
  ) : (
  <div>
  <h3 className="font-semibold text-primary-navy mb-2">Purchase Series</h3>
@@ -356,7 +481,7 @@ export default function SeriesDetailClient({
  {}
  <div className="bg-white border border-neutral-light-gray rounded-lg overflow-hidden">
  <div className="p-4 border-b border-neutral-light-gray bg-neutral-light-gray/30">
- <h3 className="font-semibold text-primary-navy">Series Videos</h3>
+ <h3 className="font-semibold text-primary-navy">Series Videos ({series.videos.length})</h3>
  </div>
 
  <div className="max-h-[600px] overflow-y-auto">
@@ -366,65 +491,89 @@ export default function SeriesDetailClient({
  <p>No videos in this series yet</p>
  </div>
  ) : (
- series.videos.map((seriesVideo, index) => {
+ <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-4">
+ {series.videos.map((seriesVideo, index) => {
  const video = seriesVideo.video;
- const isLocked = !hasAccess;
+ const isFree = seriesVideo.accessType === 'free';
+ const isPaid = seriesVideo.accessType === 'paid';
+ const isSeriesOnly = seriesVideo.accessType === 'series-only';
+ const isLocked = !hasAccess && !isFree;
+ const isActive = hasAccess && currentVideoIndex === index;
 
  return (
  <motion.div
  key={video.id}
- className={`p-4 border-b border-neutral-light-gray last:border-b-0 cursor-pointer hover:bg-neutral-light-gray/50 transition-colors ${
- isLocked ? 'opacity-75' : ''
- }`}
- onClick={() => handleVideoClick(video.id)}
- whileHover={{ x: isLocked ? 0 : 4 }}
+ className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+ isActive 
+ ? 'border-primary-neon-yellow shadow-lg' 
+ : 'border-neutral-light-gray hover:border-accent-teal'
+ } ${isLocked ? 'opacity-75' : ''}`}
+ onClick={() => handleVideoSelect(index)}
+ whileHover={{ scale: isLocked ? 1 : 1.05 }}
  transition={{ duration: 0.2 }}
  >
- <div className="flex items-start space-x-3">
- <div className="relative flex-shrink-0">
- <div className="w-24 h-16 bg-neutral-light-gray rounded overflow-hidden">
+ <div className="aspect-video bg-neutral-light-gray relative">
  <Image
  src={video.thumbnailUrl}
  alt={video.title}
- width={96}
- height={64}
- className="w-full h-full object-cover"
+ fill
+ className="object-cover"
  />
- </div>
 
  {}
- <div className="absolute -top-2 -left-2 w-6 h-6 bg-primary-navy text-white text-xs rounded-full flex items-center justify-center font-semibold">
+ <div className="absolute top-2 left-2 w-8 h-8 bg-primary-navy text-white text-sm rounded-full flex items-center justify-center font-bold shadow-lg">
  {index + 1}
  </div>
 
+ {/* FREE badge - hidden */}
+
+ {}
+ {isPaid && !hasAccess && (
+ <div className="absolute top-2 right-2 bg-purple-600 text-white text-xs px-2 py-1 rounded-full font-semibold shadow-lg">
+ {seriesVideo.individualCoinPrice} 🪙
+ </div>
+ )}
+
  {}
  {isLocked && (
- <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded">
- <Lock className="w-5 h-5 text-white" />
+ <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+ <div className="text-center text-white">
+ <Lock className="w-6 h-6 mx-auto mb-1" />
+ {isPaid && (
+ <p className="text-xs">{seriesVideo.individualCoinPrice} coins</p>
+ )}
+ </div>
  </div>
  )}
 
  {}
- {!isLocked && (
- <div className="absolute inset-0 bg-black/0 hover:bg-black/30 flex items-center justify-center rounded transition-colors">
- <Play className="w-6 h-6 text-white opacity-0 hover:opacity-100 transition-opacity" fill="white" />
+ {!isLocked && !isActive && (
+ <div className="absolute inset-0 bg-black/0 hover:bg-black/40 flex items-center justify-center transition-colors">
+ <Play className="w-8 h-8 text-white opacity-0 hover:opacity-100 transition-opacity" fill="white" />
  </div>
  )}
+
+ {}
+ {isActive && (
+ <div className="absolute inset-0 border-4 border-primary-neon-yellow pointer-events-none" />
+ )}
+
+ {}
+ <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
+ {formatDuration(video.duration)}
+ </div>
  </div>
 
- <div className="flex-1 min-w-0">
- <h4 className="font-medium text-sm text-primary-navy line-clamp-2 mb-1">
+ {}
+ <div className="p-2 bg-white">
+ <h4 className="text-xs font-medium text-primary-navy line-clamp-2">
  {video.title}
  </h4>
- <div className="flex items-center space-x-2 text-xs text-neutral-dark-gray">
- <Clock className="w-3 h-3" />
- <span>{formatDuration(video.duration)}</span>
- </div>
- </div>
  </div>
  </motion.div>
  );
- })
+ })}
+ </div>
  )}
  </div>
  </div>
@@ -467,9 +616,15 @@ function SeriesPurchaseModal({
  React.useEffect(() => {
  if (userId) {
  fetch('/api/coins/balance')
- .then((res) => res.json())
+ .then((res) => {
+ if (!res.ok) {
+ throw new Error('Failed to fetch balance');
+ }
+ return res.json();
+ })
  .then((data) => {
- if (data.success) {
+ // API returns { balance, totalPurchased, totalSpent, lastUpdated }
+ if (typeof data.balance === 'number') {
  setCoinBalance(data.balance);
  }
  })

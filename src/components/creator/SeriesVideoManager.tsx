@@ -20,6 +20,7 @@ interface SeriesVideoManagerProps {
  onVideoAdded: (videoId: string) => void;
  onVideoRemoved: (videoId: string) => void;
  onOrderChanged: (videoId: string, newOrder: number) => void;
+ onAccessTypeChanged?: (videoId: string, accessType: string, coinPrice?: number) => void;
 }
 
 interface VideoWithDetails extends SeriesVideo {
@@ -32,6 +33,7 @@ export default function SeriesVideoManager({
  onVideoAdded,
  onVideoRemoved,
  onOrderChanged,
+ onAccessTypeChanged,
 }: SeriesVideoManagerProps) {
  const [videosWithDetails, setVideosWithDetails] = useState<VideoWithDetails[]>([]);
  const [isLoading, setIsLoading] = useState(false);
@@ -39,6 +41,7 @@ export default function SeriesVideoManager({
  const [success, setSuccess] = useState<string | null>(null);
  const [draggedItem, setDraggedItem] = useState<string | null>(null);
  const [showAddModal, setShowAddModal] = useState(false);
+ const [editingAccessType, setEditingAccessType] = useState<string | null>(null);
 
  useEffect(() => {
  const loadVideoDetails = async () => {
@@ -169,6 +172,59 @@ export default function SeriesVideoManager({
  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
  };
 
+ const handleAccessTypeChange = async (
+ videoId: string,
+ accessType: "free" | "paid" | "series-only",
+ coinPrice?: number
+ ) => {
+ setIsLoading(true);
+ setError(null);
+
+ try {
+ const response = await fetch(`/api/series/${seriesId}/videos/${videoId}/access`, {
+ method: "PUT",
+ headers: {
+ "Content-Type": "application/json",
+ },
+ body: JSON.stringify({
+ accessType,
+ individualCoinPrice: accessType === "paid" ? coinPrice : 0,
+ }),
+ });
+
+ if (!response.ok) {
+ const data = await response.json();
+ throw new Error(data.error || "Failed to update access type");
+ }
+
+ if (onAccessTypeChanged) {
+ onAccessTypeChanged(videoId, accessType, coinPrice);
+ }
+
+ // Refresh video details
+ const updatedVideos = videosWithDetails.map(v => {
+ if (v.videoId === videoId) {
+ return {
+ ...v,
+ accessType,
+ individualCoinPrice: accessType === "paid" ? coinPrice : 0,
+ };
+ }
+ return v;
+ });
+ setVideosWithDetails(updatedVideos);
+
+ setSuccess("Access type updated successfully");
+ setTimeout(() => setSuccess(null), 3000);
+ setEditingAccessType(null);
+ } catch (error) {
+ console.error("Failed to update access type:", error);
+ setError(error instanceof Error ? error.message : "Failed to update access type");
+ } finally {
+ setIsLoading(false);
+ }
+ };
+
  return (
  <div className="space-y-6">
  {}
@@ -297,6 +353,36 @@ export default function SeriesVideoManager({
  <span>₹{seriesVideo.video.creditCost} credits</span>
  <span>{seriesVideo.video.viewCount} views</span>
  </div>
+ <div className="mt-2">
+ {editingAccessType === seriesVideo.videoId ? (
+ <AccessTypeEditor
+ videoId={seriesVideo.videoId}
+ currentAccessType={seriesVideo.accessType || "series-only"}
+ currentCoinPrice={seriesVideo.individualCoinPrice || 0}
+ onSave={handleAccessTypeChange}
+ onCancel={() => setEditingAccessType(null)}
+ />
+ ) : (
+ <button
+ onClick={() => setEditingAccessType(seriesVideo.videoId)}
+ className="inline-flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-full transition-colors"
+ style={{
+ backgroundColor: 
+ seriesVideo.accessType === "free" ? "#dcfce7" :
+ seriesVideo.accessType === "paid" ? "#fef3c7" :
+ "#e0e7ff",
+ color:
+ seriesVideo.accessType === "free" ? "#166534" :
+ seriesVideo.accessType === "paid" ? "#92400e" :
+ "#3730a3",
+ }}
+ >
+ {seriesVideo.accessType === "free" && "🆓 Free"}
+ {seriesVideo.accessType === "paid" && `💰 Paid (${seriesVideo.individualCoinPrice || 0} coins)`}
+ {(!seriesVideo.accessType || seriesVideo.accessType === "series-only") && "🔒 Series Only"}
+ </button>
+ )}
+ </div>
  </div>
 
  {}
@@ -325,6 +411,120 @@ export default function SeriesVideoManager({
  onVideoAdded={onVideoAdded}
  />
  )}
+ </div>
+ );
+}
+
+function AccessTypeEditor({
+ videoId,
+ currentAccessType,
+ currentCoinPrice,
+ onSave,
+ onCancel,
+}: {
+ videoId: string;
+ currentAccessType: "free" | "paid" | "series-only";
+ currentCoinPrice: number;
+ onSave: (videoId: string, accessType: "free" | "paid" | "series-only", coinPrice?: number) => void;
+ onCancel: () => void;
+}) {
+ const [accessType, setAccessType] = useState<"free" | "paid" | "series-only">(currentAccessType);
+ const [coinPrice, setCoinPrice] = useState(currentCoinPrice || 0);
+
+ const handleSave = () => {
+ if (accessType === "paid" && coinPrice <= 0) {
+ alert("Please enter a valid coin price for paid videos");
+ return;
+ }
+ onSave(videoId, accessType, coinPrice);
+ };
+
+ return (
+ <div className="flex flex-col gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+ <div className="text-sm font-medium text-gray-700">Set Video Access Type</div>
+ 
+ <div className="space-y-2">
+ {}
+ <label className="flex items-start gap-3 p-2 bg-white rounded border border-gray-200 cursor-pointer hover:border-green-400 transition-colors">
+ <input
+ type="radio"
+ name={`access-${videoId}`}
+ value="free"
+ checked={accessType === "free"}
+ onChange={(e) => setAccessType(e.target.value as "free")}
+ className="mt-1 w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+ />
+ <div className="flex-1">
+ <div className="font-medium text-gray-900 text-sm">🆓 Free Video</div>
+ <div className="text-xs text-gray-500 mt-0.5">
+ Members can watch this video for free without purchasing the series
+ </div>
+ </div>
+ </label>
+
+ {}
+ <label className="flex items-start gap-3 p-2 bg-white rounded border border-gray-200 cursor-pointer hover:border-yellow-400 transition-colors">
+ <input
+ type="radio"
+ name={`access-${videoId}`}
+ value="paid"
+ checked={accessType === "paid"}
+ onChange={(e) => setAccessType(e.target.value as "paid")}
+ className="mt-1 w-4 h-4 text-yellow-600 border-gray-300 focus:ring-yellow-500"
+ />
+ <div className="flex-1">
+ <div className="font-medium text-gray-900 text-sm">💰 Paid Video</div>
+ <div className="text-xs text-gray-500 mt-0.5">
+ Members must pay coins to watch this video individually
+ </div>
+ {accessType === "paid" && (
+ <div className="mt-2">
+ <input
+ type="number"
+ min="1"
+ value={coinPrice}
+ onChange={(e) => setCoinPrice(parseInt(e.target.value) || 0)}
+ placeholder="Enter coin price"
+ className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+ />
+ </div>
+ )}
+ </div>
+ </label>
+
+ {}
+ <label className="flex items-start gap-3 p-2 bg-white rounded border border-gray-200 cursor-pointer hover:border-purple-400 transition-colors">
+ <input
+ type="radio"
+ name={`access-${videoId}`}
+ value="series-only"
+ checked={accessType === "series-only"}
+ onChange={(e) => setAccessType(e.target.value as "series-only")}
+ className="mt-1 w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500"
+ />
+ <div className="flex-1">
+ <div className="font-medium text-gray-900 text-sm">🔒 Series Only</div>
+ <div className="text-xs text-gray-500 mt-0.5">
+ Only accessible when member purchases the complete series
+ </div>
+ </div>
+ </label>
+ </div>
+
+ <div className="flex gap-2 pt-2">
+ <button
+ onClick={handleSave}
+ className="flex-1 px-3 py-1.5 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700 transition-colors"
+ >
+ Save
+ </button>
+ <button
+ onClick={onCancel}
+ className="flex-1 px-3 py-1.5 bg-gray-200 text-gray-700 text-sm font-medium rounded hover:bg-gray-300 transition-colors"
+ >
+ Cancel
+ </button>
+ </div>
  </div>
  );
 }

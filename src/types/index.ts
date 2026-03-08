@@ -174,6 +174,8 @@ export interface SeriesVideo {
  seriesId: string;
  videoId: string;
  orderIndex: number;
+ accessType?: "free" | "paid" | "series-only";
+ individualCoinPrice?: number;
  createdAt: Date;
 
  video?: Video;

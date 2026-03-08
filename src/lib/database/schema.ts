@@ -928,12 +928,18 @@ export const seriesVideos = pgTable(
             .notNull()
             .references(() => videos.id, { onDelete: "cascade" }),
         orderIndex: integer("order_index").notNull(),
+        accessType: varchar("access_type", { length: 20 })
+            .default("series-only")
+            .notNull()
+            .$type<"free" | "paid" | "series-only">(),
+        individualCoinPrice: integer("individual_coin_price").default(0),
         createdAt: timestamp("created_at").defaultNow().notNull(),
     },
     (table) => ({
         seriesIdIdx: index("series_videos_series_id_idx").on(table.seriesId),
         videoIdIdx: index("series_videos_video_id_idx").on(table.videoId),
         orderIndexIdx: index("series_videos_order_index_idx").on(table.orderIndex),
+        accessTypeIdx: index("series_videos_access_type_idx").on(table.accessType),
         uniqueSeriesVideo: index("series_videos_series_video_unique").on(table.seriesId, table.videoId),
         uniqueSeriesOrder: index("series_videos_series_order_unique").on(table.seriesId, table.orderIndex),
     })

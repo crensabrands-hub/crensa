@@ -326,8 +326,9 @@ function SeriesListRow({
  const [showActions, setShowActions] = useState(false);
 
  return (
- <div
- className="p-6 hover:bg-gray-50 transition-colors"
+ <Link
+ href={`/creator/series/${series.id}`}
+ className="block p-6 hover:bg-gray-50 transition-colors cursor-pointer"
  onMouseEnter={() => setShowActions(true)}
  onMouseLeave={() => setShowActions(false)}
  >
@@ -389,18 +390,21 @@ function SeriesListRow({
  animate={{ opacity: 1, x: 0 }}
  exit={{ opacity: 0, x: 10 }}
  className="flex items-center gap-2"
+ onClick={(e) => e.preventDefault()}
  >
  <Link
  href={`/creator/series/${series.id}/analytics`}
  className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
  title="View analytics"
+ onClick={(e) => e.stopPropagation()}
  >
  <ChartBarIcon className="w-4 h-4" />
  </Link>
  <Link
- href={`/creator/series/${series.id}/edit`}
+ href={`/creator/series/${series.id}`}
  className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
- title="Edit series"
+ title="Manage series"
+ onClick={(e) => e.stopPropagation()}
  >
  <PencilIcon className="w-4 h-4" />
  </Link>
@@ -408,11 +412,16 @@ function SeriesListRow({
  href={`/series/${series.id}`}
  className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors"
  title="View series"
+ onClick={(e) => e.stopPropagation()}
  >
  <EyeIcon className="w-4 h-4" />
  </Link>
  <button
- onClick={onDelete}
+ onClick={(e) => {
+ e.preventDefault();
+ e.stopPropagation();
+ onDelete();
+ }}
  className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
  title="Delete series"
  >
@@ -422,6 +431,6 @@ function SeriesListRow({
  )}
  </AnimatePresence>
  </div>
- </div>
+ </Link>
  );
 }
