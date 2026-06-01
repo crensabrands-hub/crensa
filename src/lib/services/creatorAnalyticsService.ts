@@ -10,6 +10,7 @@ import {
  coinTransactions,
  creatorProfiles,
  series,
+ watchSessions,
 } from "../database/schema";
 import { coinsToRupees } from "../utils/coin-utils";
 
@@ -22,6 +23,7 @@ export interface CreatorDashboardStats {
  avgCoinsPerVideo: number;
  avgEarningsPerVideo: number; // Rupee equivalent for backward compatibility
  avgViewsPerVideo: number;
+ avgWatchTimeSeconds: number;
  monthlyGrowth: {
  earnings: number;
  views: number;
@@ -105,8 +107,18 @@ export class CreatorAnalyticsService {
  const avgViewsPerVideo =
  profile.videoCount > 0 ? profile.totalViews / profile.videoCount : 0;
 
- const monthlyGrowthPromise = this.getMonthlyGrowth(creatorId);
- const monthlyGrowth = await monthlyGrowthPromise;
+ const [monthlyGrowth, avgWatchTimeResult] = await Promise.all([
+ this.getMonthlyGrowth(creatorId),
+ db
+ .select({
+ avgSeconds: sql<number>`COALESCE(AVG(${watchSessions.durationSeconds}), 0)`,
+ })
+ .from(watchSessions)
+ .innerJoin(videos, eq(watchSessions.videoId, videos.id))
+ .where(eq(videos.creatorId, creatorId)),
+ ]);
+
+ const avgWatchTimeSeconds = Math.round(Number(avgWatchTimeResult[0]?.avgSeconds ?? 0));
 
  const stats = {
  totalCoinsEarned,
@@ -117,6 +129,7 @@ export class CreatorAnalyticsService {
  avgCoinsPerVideo,
  avgEarningsPerVideo,
  avgViewsPerVideo,
+ avgWatchTimeSeconds,
  monthlyGrowth,
  };
 

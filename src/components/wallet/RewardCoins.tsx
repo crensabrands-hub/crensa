@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
  GiftIcon,
@@ -14,6 +14,77 @@ import {
  StarIcon
 } from '@heroicons/react/24/outline'
 import { useAuthContext } from '@/contexts/AuthContext'
+
+// Sub-component: fetches and displays the real referral code from the API
+function ReferralCodePanel() {
+ const [referralCode, setReferralCode] = useState<string | null>(null)
+ const [totalReferred, setTotalReferred] = useState<number>(0)
+ const [copied, setCopied] = useState(false)
+ const [loading, setLoading] = useState(true)
+
+ useEffect(() => {
+ fetch('/api/creator/referrals')
+ .then((r) => r.ok ? r.json() : null)
+ .then((data) => {
+ if (data) {
+ setReferralCode(data.referralCode)
+ setTotalReferred(data.totalReferred ?? 0)
+ }
+ })
+ .catch(() => {})
+ .finally(() => setLoading(false))
+ }, [])
+
+ const referralLink = referralCode
+ ? `${typeof window !== 'undefined' ? window.location.origin : ''}/sign-up?ref=${referralCode}`
+ : null
+
+ const handleCopy = useCallback(() => {
+ if (!referralLink) return
+ navigator.clipboard.writeText(referralLink).then(() => {
+ setCopied(true)
+ setTimeout(() => setCopied(false), 2000)
+ })
+ }, [referralLink])
+
+ if (loading) {
+ return (
+ <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg animate-pulse h-24" />
+ )
+ }
+
+ return (
+ <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+ <div className="flex items-center justify-between mb-2">
+ <h4 className="font-medium text-green-900">How Referrals Work</h4>
+ <span className="text-sm font-semibold text-green-700">
+ {totalReferred} user{totalReferred !== 1 ? 's' : ''} referred
+ </span>
+ </div>
+ <ul className="text-sm text-green-700 space-y-1 mb-3">
+ <li>• Share your unique referral link with friends</li>
+ <li>• They sign up using your link</li>
+ <li>• You can track how many joined through your link</li>
+ </ul>
+ {referralCode ? (
+ <div className="flex items-center gap-2 flex-wrap">
+ <span className="text-sm font-medium text-green-900">Your referral link:</span>
+ <code className="px-2 py-1 bg-green-100 rounded text-green-800 font-mono text-xs break-all">
+ {referralLink}
+ </code>
+ <button
+ onClick={handleCopy}
+ className="text-green-600 hover:text-green-700 text-sm font-medium whitespace-nowrap"
+ >
+ {copied ? '✓ Copied!' : 'Copy'}
+ </button>
+ </div>
+ ) : (
+ <p className="text-sm text-green-600">Referral code not available for your account type.</p>
+ )}
+ </div>
+ )
+}
 
 interface RewardTask {
  id: string
@@ -274,26 +345,8 @@ export default function RewardCoins() {
  />
  ))}
  </div>
- 
- <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
- <h4 className="font-medium text-green-900 mb-2">How Referrals Work</h4>
- <ul className="text-sm text-green-700 space-y-1">
- <li>• Share your unique referral code with friends</li>
- <li>• They sign up and make their first purchase</li>
- <li>• You both get 100 bonus credits!</li>
- </ul>
- <div className="mt-3">
- <div className="flex items-center gap-2">
- <span className="text-sm font-medium text-green-900">Your referral code:</span>
- <code className="px-2 py-1 bg-green-100 rounded text-green-800 font-mono text-sm">
- CRENSA{userProfile?.username?.toUpperCase().slice(0, 4) || 'USER'}
- </code>
- <button className="text-green-600 hover:text-green-700 text-sm font-medium">
- Copy
- </button>
- </div>
- </div>
- </div>
+
+ <ReferralCodePanel />
  </div>
 
  {}

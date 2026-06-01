@@ -68,12 +68,15 @@ export const creatorProfiles = pgTable(
         coinBalance: integer("coin_balance").default(0).notNull(),
         totalCoinsEarned: integer("total_coins_earned").default(0).notNull(),
         coinsWithdrawn: integer("coins_withdrawn").default(0).notNull(),
+        // Referral system: unique code per creator for tracking signups
+        referralCode: varchar("referral_code", { length: 20 }).unique(),
         createdAt: timestamp("created_at").defaultNow().notNull(),
         updatedAt: timestamp("updated_at").defaultNow().notNull(),
     },
     (table) => ({
         userIdIdx: index("creator_profiles_user_id_idx").on(table.userId),
         coinBalanceIdx: index("creator_profiles_coin_balance_idx").on(table.coinBalance),
+        referralCodeIdx: index("creator_profiles_referral_code_idx").on(table.referralCode),
     })
 );
 
@@ -623,6 +626,14 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     }),
 
     coinTransactions: many(coinTransactions),
+    referralsMade: many(referrals, {
+        relationName: "referrerRelation",
+    }),
+    referredBy: one(referrals, {
+        fields: [users.id],
+        references: [referrals.referredUserId],
+        relationName: "referredUserRelation",
+    }),
 }));
 
 export const creatorProfilesRelations = relations(
@@ -658,12 +669,12 @@ export const videosRelations = relations(videos, ({ one, many }) => ({
         references: [users.id],
         relationName: "moderatorRelation",
     }),
-
     series: one(series, {
         fields: [videos.seriesId],
         references: [series.id],
     }),
     seriesVideos: many(seriesVideos),
+    watchSessions: many(watchSessions),
 }));
 
 export const videoSharesRelations = relations(videoShares, ({ one }) => ({
@@ -1078,6 +1089,58 @@ export const coinPackages = pgTable(
     })
 );
 
+export const referrals = pgTable(
+    "referrals",
+    {
+        id: uuid("id").primaryKey().defaultRandom(),
+        // Creator who owns the referral code
+        referrerId: uuid("referrer_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        // New user who signed up via the referral link
+        referredUserId: uuid("referred_user_id")
+            .notNull()
+            .unique() // One user can only be referred once
+            .references(() => users.id, { onDelete: "cascade" }),
+        // The code used at signup — immutable record
+        referralCode: varchar("referral_code", { length: 20 }).notNull(),
+        // Status: completed = tracked. Future: 'rewarded' when reward system is added
+        status: varchar("status", { length: 20 })
+            .default("completed")
+            .notNull()
+            .$type<"completed" | "rewarded">(),
+        // Future-ready reward fields — null until reward system is implemented
+        rewardIssuedAt: timestamp("reward_issued_at"),
+        rewardAmount: integer("reward_amount"), // coins
+        metadata: jsonb("metadata"),
+        createdAt: timestamp("created_at").defaultNow().notNull(),
+        updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    },
+    (table) => ({
+        referrerIdIdx: index("referrals_referrer_id_idx").on(table.referrerId),
+        referredUserIdIdx: index("referrals_referred_user_id_idx").on(table.referredUserId),
+        referralCodeIdx: index("referrals_referral_code_idx").on(table.referralCode),
+        statusIdx: index("referrals_status_idx").on(table.status),
+        createdAtIdx: index("referrals_created_at_idx").on(table.createdAt),
+    })
+);
+
+export const referralsRelations = relations(referrals, ({ one }) => ({
+    referrer: one(users, {
+        fields: [referrals.referrerId],
+        references: [users.id],
+        relationName: "referrerRelation",
+    }),
+    referredUser: one(users, {
+        fields: [referrals.referredUserId],
+        references: [users.id],
+        relationName: "referredUserRelation",
+    }),
+}));
+
+export type Referral = typeof referrals.$inferSelect;
+export type NewReferral = typeof referrals.$inferInsert;
+
 export const reportsRelations = relations(reports, ({ one }) => ({
     reporter: one(users, {
         fields: [reports.reporterId],
@@ -1182,6 +1245,41 @@ export const coinPackagesRelations = relations(coinPackages, ({ many }) => ({
 
 }));
 
+export const watchSessions = pgTable(
+    "watch_sessions",
+    {
+        id: uuid("id").primaryKey().defaultRandom(),
+        videoId: uuid("video_id")
+            .notNull()
+            .references(() => videos.id, { onDelete: "cascade" }),
+        // nullable — anonymous views still tracked
+        userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+        durationSeconds: integer("duration_seconds").default(0).notNull(),
+        completed: boolean("completed").default(false).notNull(),
+        createdAt: timestamp("created_at").defaultNow().notNull(),
+        updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    },
+    (table) => ({
+        videoIdIdx: index("watch_sessions_video_id_idx").on(table.videoId),
+        userIdIdx: index("watch_sessions_user_id_idx").on(table.userId),
+        createdAtIdx: index("watch_sessions_created_at_idx").on(table.createdAt),
+    })
+);
+
+export const watchSessionsRelations = relations(watchSessions, ({ one }) => ({
+    video: one(videos, {
+        fields: [watchSessions.videoId],
+        references: [videos.id],
+    }),
+    user: one(users, {
+        fields: [watchSessions.userId],
+        references: [users.id],
+    }),
+}));
+
+export type WatchSession = typeof watchSessions.$inferSelect;
+export type NewWatchSession = typeof watchSessions.$inferInsert;
+
 export type Report = typeof reports.$inferSelect;
 export type NewReport = typeof reports.$inferInsert;
 export type AuditLog = typeof auditLogs.$inferSelect;
@@ -1251,6 +1349,8 @@ export const schema = {
     contentFilters,
     coinTransactions,
     coinPackages,
+    referrals,
+    watchSessions,
     // Relations
     usersRelations,
     creatorProfilesRelations,
@@ -1277,4 +1377,6 @@ export const schema = {
     contentFiltersRelations,
     coinTransactionsRelations,
     coinPackagesRelations,
+    referralsRelations,
+    watchSessionsRelations,
 };

@@ -8,24 +8,26 @@ import UserManagement from './UserManagement';
 import VideoModeration from './VideoModeration';
 import ReportsManagement from './ReportsManagement';
 import ContentFilters from './ContentFilters';
+import ReferralAnalytics from './ReferralAnalytics';
 
 interface AdminDashboardProps {
- stats: AdminStats | null;
+  stats: AdminStats | null;
 }
 
-type TabType = 'overview' | 'users' | 'videos' | 'reports' | 'audit' | 'filters';
+type TabType = 'overview' | 'users' | 'videos' | 'reports' | 'audit' | 'filters' | 'referrals';
 
 export default function AdminDashboard({ stats }: AdminDashboardProps) {
- const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
 
- const tabs = [
- { id: 'overview', label: 'Overview', icon: '📊' },
- { id: 'users', label: 'User Management', icon: '👥' },
- { id: 'videos', label: 'Video Moderation', icon: '🎥' },
- { id: 'reports', label: 'Reports', icon: '🚨' },
- { id: 'audit', label: 'Audit Logs', icon: '📋' },
- { id: 'filters', label: 'Content Filters', icon: '🛡️' },
- ];
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: '📊' },
+    { id: 'users', label: 'User Management', icon: '👥' },
+    { id: 'videos', label: 'Video Moderation', icon: '🎥' },
+    { id: 'reports', label: 'Reports', icon: '🚨' },
+    { id: 'audit', label: 'Audit Logs', icon: '📋' },
+    { id: 'filters', label: 'Content Filters', icon: '🛡️' },
+    { id: 'referrals', label: 'Referrals', icon: '🔗' },
+  ];
 
  return (
  <div className="min-h-screen bg-gray-50">
@@ -73,6 +75,7 @@ export default function AdminDashboard({ stats }: AdminDashboardProps) {
  {activeTab === 'reports' && <ReportsManagement />}
  {activeTab === 'audit' && <AuditLogs />}
  {activeTab === 'filters' && <ContentFilters />}
+ {activeTab === 'referrals' && <ReferralAnalytics />}
  </div>
  </div>
  );

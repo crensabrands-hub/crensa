@@ -9,7 +9,7 @@ import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import SeriesQuickActions from "@/components/creator/SeriesQuickActions";
 import CoinBalance from "@/components/wallet/CoinBalance";
 import { coinsToRupees, formatRupees } from "@/lib/utils/coin-utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface DashboardStats {
     totalCoinsEarned: number;
@@ -20,6 +20,7 @@ interface DashboardStats {
     avgCoinsPerVideo: number;
     avgEarningsPerVideo: number; // Rupee equivalent for backward compatibility
     avgViewsPerVideo: number;
+    avgWatchTimeSeconds: number;
     monthlyGrowth: {
         earnings: number;
         views: number;
@@ -42,6 +43,134 @@ interface DashboardData {
     recentActivity: RecentActivity[];
     topVideos: any[];
     profile: any;
+}
+
+function ReferralCard() {
+    const [referralCode, setReferralCode] = useState<string | null>(null);
+    const [totalReferred, setTotalReferred] = useState(0);
+    const [allReferrals, setAllReferrals] = useState<Array<{ username: string; joinedAt: string }>>([]);
+    const [copied, setCopied] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetch("/api/creator/referrals")
+            .then((r) => (r.ok ? r.json() : null))
+            .then((data) => {
+                if (data) {
+                    setReferralCode(data.referralCode ?? null);
+                    setTotalReferred(data.totalReferred ?? 0);
+                    setAllReferrals(data.recentReferrals ?? []);
+                }
+            })
+            .catch(() => {})
+            .finally(() => setLoading(false));
+    }, []);
+
+    const referralLink = referralCode
+        ? `${typeof window !== "undefined" ? window.location.origin : ""}/sign-up?ref=${referralCode}`
+        : null;
+
+    const handleCopy = useCallback(() => {
+        if (!referralLink) return;
+        navigator.clipboard.writeText(referralLink).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        });
+    }, [referralLink]);
+
+    return (
+        <div className="card">
+            {/* Header */}
+            <div className="flex items-center gap-2 mb-6">
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <h3 className="text-xl font-semibold text-primary-navy">Referral Program</h3>
+            </div>
+
+            {/* Stats row */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-green-50 border border-green-100 rounded-lg p-4">
+                    <p className="text-xs text-green-700 mb-1">Users Referred</p>
+                    <p className="text-3xl font-bold text-green-800">{loading ? "—" : totalReferred}</p>
+                    <p className="text-xs text-green-600 mt-1">total sign-ups via your link</p>
+                </div>
+                <div className="bg-gray-50 border border-gray-100 rounded-lg p-4">
+                    <p className="text-xs text-gray-500 mb-1">Referral Earnings</p>
+                    <p className="text-3xl font-bold text-gray-400">₹0</p>
+                    <p className="text-xs text-gray-400 mt-1">rewards not yet enabled</p>
+                </div>
+            </div>
+
+            {/* Referral link */}
+            {loading ? (
+                <div className="h-12 bg-gray-100 rounded-lg animate-pulse mb-4" />
+            ) : referralLink ? (
+                <div className="mb-6">
+                    <p className="text-xs font-medium text-neutral-dark-gray mb-2">Your referral link</p>
+                    <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <code className="text-xs font-mono text-green-800 flex-1 break-all">{referralLink}</code>
+                        <button
+                            onClick={handleCopy}
+                            className="shrink-0 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-md transition-colors"
+                        >
+                            {copied ? "✓ Copied!" : "Copy Link"}
+                        </button>
+                    </div>
+                    <p className="text-xs text-neutral-dark-gray mt-1.5">
+                        Code: <code className="font-mono font-semibold text-primary-navy">{referralCode}</code>
+                    </p>
+                </div>
+            ) : (
+                <p className="text-sm text-neutral-dark-gray mb-6">Referral code not available.</p>
+            )}
+
+            {/* Referred users list */}
+            <div>
+                <p className="text-sm font-medium text-primary-navy mb-3">
+                    Users joined via your link
+                    {totalReferred > 0 && (
+                        <span className="ml-2 text-xs font-normal text-neutral-dark-gray">
+                            (showing latest {Math.min(allReferrals.length, 5)})
+                        </span>
+                    )}
+                </p>
+
+                {loading ? (
+                    <div className="space-y-2">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="h-10 bg-gray-100 rounded animate-pulse" />
+                        ))}
+                    </div>
+                ) : allReferrals.length === 0 ? (
+                    <div className="text-center py-8 border border-dashed border-gray-200 rounded-lg">
+                        <p className="text-sm text-neutral-dark-gray">No referrals yet</p>
+                        <p className="text-xs text-neutral-dark-gray mt-1">Share your link to start tracking sign-ups</p>
+                    </div>
+                ) : (
+                    <div className="divide-y divide-gray-100 border border-gray-100 rounded-lg overflow-hidden">
+                        {allReferrals.map((r, i) => (
+                            <div key={`${r.username}-${i}`} className="flex items-center justify-between px-4 py-3 bg-white hover:bg-gray-50 transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+                                        <span className="text-white text-xs font-semibold">
+                                            {r.username[0].toUpperCase()}
+                                        </span>
+                                    </div>
+                                    <span className="text-sm font-medium text-primary-navy">@{r.username}</span>
+                                </div>
+                                <span className="text-xs text-neutral-dark-gray">
+                                    {new Date(r.joinedAt).toLocaleDateString("en-IN", {
+                                        day: "numeric", month: "short", year: "numeric",
+                                    })}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
 }
 
 function CreatorDashboardContent() {
@@ -175,7 +304,7 @@ function CreatorDashboardContent() {
             </div>
 
             { }
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="card">
                     <h3 className="text-lg font-semibold text-primary-navy mb-2">
                         Total Coins Earned
@@ -248,6 +377,24 @@ function CreatorDashboardContent() {
                         {formatRupees(coinsToRupees(stats.avgCoinsPerVideo || 0))} per video
                     </p>
                 </div>
+
+                <div className="card">
+                    <h3 className="text-lg font-semibold text-primary-navy mb-2">
+                        Avg. Watch Time
+                    </h3>
+                    <p className="text-2xl font-bold text-orange-500">
+                        {(() => {
+                            const s = stats.avgWatchTimeSeconds || 0;
+                            if (s < 60) return `${s}s`;
+                            const m = Math.floor(s / 60);
+                            const rem = s % 60;
+                            return rem > 0 ? `${m}m ${rem}s` : `${m}m`;
+                        })()}
+                    </p>
+                    <p className="text-sm text-neutral-dark-gray mt-1">
+                        per session across videos &amp; series
+                    </p>
+                </div>
             </div>
 
             { }
@@ -259,8 +406,7 @@ function CreatorDashboardContent() {
             <SeriesQuickActions />
 
             { }
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                { }
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">                { }
                 <div className="card">
                     <h3 className="text-xl font-semibold text-primary-navy mb-4">
                         Quick Actions
@@ -425,6 +571,9 @@ function CreatorDashboardContent() {
                     </div>
                 </div>
             </div>
+
+            { }
+            <ReferralCard />
         </div>
     );
 }

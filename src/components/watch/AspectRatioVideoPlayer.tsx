@@ -17,6 +17,7 @@ interface AspectRatioVideoPlayerProps {
  autoplay?: boolean;
  controls?: boolean;
  className?: string;
+ videoId?: string; // used for watch session tracking
  onPlay?: () => void;
  onPause?: () => void;
  onEnded?: () => void;
@@ -59,6 +60,7 @@ export const AspectRatioVideoPlayer: React.FC<AspectRatioVideoPlayerProps> = ({
  autoplay = false,
  controls = true,
  className = '',
+ videoId,
  onPlay,
  onPause,
  onEnded,
@@ -67,6 +69,19 @@ export const AspectRatioVideoPlayer: React.FC<AspectRatioVideoPlayerProps> = ({
  const videoRef = useRef<HTMLVideoElement>(null);
  const containerRef = useRef<HTMLDivElement>(null);
  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+ // Track watch start time to calculate session duration
+ const watchStartRef = useRef<number | null>(null);
+ const accumulatedRef = useRef<number>(0);
+
+ // Fire a watch session record to the API — non-blocking, best-effort
+ const recordSession = React.useCallback((durationSeconds: number, completed: boolean) => {
+   if (!videoId || durationSeconds < 1) return;
+   fetch('/api/watch/session', {
+     method: 'POST',
+     headers: { 'Content-Type': 'application/json' },
+     body: JSON.stringify({ videoId, durationSeconds, completed }),
+   }).catch(() => {}); // silently ignore network errors
+ }, [videoId]);
 
  const [playerState, setPlayerState] = useState<PlayerState>({
  isPlaying: false,
@@ -103,18 +118,30 @@ export const AspectRatioVideoPlayer: React.FC<AspectRatioVideoPlayerProps> = ({
  };
 
  const handlePlay = () => {
- setPlayerState(prev => ({ ...prev, isPlaying: true }));
- onPlay?.();
+   setPlayerState(prev => ({ ...prev, isPlaying: true }));
+   watchStartRef.current = Date.now();
+   onPlay?.();
  };
 
  const handlePause = () => {
- setPlayerState(prev => ({ ...prev, isPlaying: false }));
- onPause?.();
+   setPlayerState(prev => ({ ...prev, isPlaying: false }));
+   if (watchStartRef.current !== null) {
+     accumulatedRef.current += (Date.now() - watchStartRef.current) / 1000;
+     watchStartRef.current = null;
+     recordSession(Math.round(accumulatedRef.current), false);
+   }
+   onPause?.();
  };
 
  const handleEnded = () => {
- setPlayerState(prev => ({ ...prev, isPlaying: false }));
- onEnded?.();
+   setPlayerState(prev => ({ ...prev, isPlaying: false }));
+   if (watchStartRef.current !== null) {
+     accumulatedRef.current += (Date.now() - watchStartRef.current) / 1000;
+     watchStartRef.current = null;
+   }
+   recordSession(Math.round(accumulatedRef.current), true);
+   accumulatedRef.current = 0;
+   onEnded?.();
  };
 
  const handleVolumeChange = () => {
@@ -132,13 +159,24 @@ export const AspectRatioVideoPlayer: React.FC<AspectRatioVideoPlayerProps> = ({
  video.addEventListener('ended', handleEnded);
  video.addEventListener('volumechange', handleVolumeChange);
 
+ // Record session when user navigates away mid-play
+ const handleVisibilityChange = () => {
+   if (document.visibilityState === 'hidden' && watchStartRef.current !== null) {
+     accumulatedRef.current += (Date.now() - watchStartRef.current) / 1000;
+     watchStartRef.current = null;
+     recordSession(Math.round(accumulatedRef.current), false);
+   }
+ };
+ document.addEventListener('visibilitychange', handleVisibilityChange);
+
  return () => {
- video.removeEventListener('loadedmetadata', handleLoadedMetadata);
- video.removeEventListener('timeupdate', handleTimeUpdate);
- video.removeEventListener('play', handlePlay);
- video.removeEventListener('pause', handlePause);
- video.removeEventListener('ended', handleEnded);
- video.removeEventListener('volumechange', handleVolumeChange);
+   video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+   video.removeEventListener('timeupdate', handleTimeUpdate);
+   video.removeEventListener('play', handlePlay);
+   video.removeEventListener('pause', handlePause);
+   video.removeEventListener('ended', handleEnded);
+   video.removeEventListener('volumechange', handleVolumeChange);
+   document.removeEventListener('visibilitychange', handleVisibilityChange);
  };
  }, [onPlay, onPause, onEnded, onTimeUpdate]);
 

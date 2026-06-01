@@ -6,8 +6,8 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
 // ✏️ Fill these in before running
-const ADMIN_CLERK_ID = 'user_37so6Rx7jzMHRAPXc0j9nYI8SGO';
-const ADMIN_EMAIL    = 'shreyaskesari805@gmail.com';
+const ADMIN_CLERK_ID = 'user_38PzzqVR52hQMLIr2gr5ZidzoQM';
+const ADMIN_EMAIL    = 'kshitij2527@gmail.com';
 const ADMIN_USERNAME = 'admin';
 async function seedAdmin() {
   console.log('Checking for existing user...');

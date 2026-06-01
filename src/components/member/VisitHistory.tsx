@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useFetchWithRetry } from "@/hooks/useApiWithRetry";
 import { FeatureErrorBoundary } from "@/components/layout/ErrorBoundaryLayout";
 import { ApiErrorHandler } from "@/lib/utils/apiErrorHandler";
@@ -31,7 +31,6 @@ export function VisitHistory({
     className = "",
 }: VisitHistoryProps) {
     const [offset, setOffset] = useState(0);
-    const [isInitialized, setIsInitialized] = useState(false);
 
     const [apiState, apiActions] = useFetchWithRetry<{
         success: boolean;
@@ -44,9 +43,9 @@ export function VisitHistory({
         () => `/api/member/profile-visits?limit=${limit}&offset=${offset}`,
         {},
         {
-            maxRetries: 2, // Reasonable retry count now that table exists
+            maxRetries: 2,
             baseDelay: 1000,
-            retryableStatuses: [408, 429, 500, 502, 503, 504], // Include 500 again
+            retryableStatuses: [408, 429, 500, 502, 503, 504],
             onRetry: (attempt) => {
                 console.log(`Retrying visit history fetch, attempt ${attempt}`);
             },
@@ -63,18 +62,13 @@ export function VisitHistory({
 
     const isRetryable = error ? ApiErrorHandler.isRetryableError(error) : false;
 
-    useEffect(() => {
-        if (!isInitialized) {
-            setIsInitialized(true);
+    // Use a ref so the effect never has apiActions as a dependency
+    const executeRef = useRef(apiActions.execute);
+    executeRef.current = apiActions.execute;
 
-            const timer = setTimeout(() => {
-                apiActions.execute();
-            }, 100);
-            return () => clearTimeout(timer);
-        } else {
-            apiActions.execute();
-        }
-    }, [limit, offset, isInitialized, apiActions]);
+    useEffect(() => {
+        executeRef.current();
+    }, [limit, offset]);
 
     const handleRetry = () => {
         apiActions.retry();
@@ -222,7 +216,7 @@ export function VisitHistory({
                 )}
                 <div className="text-center py-8">
                     <div className="text-gray-400 mb-2">👤</div>
-                    <p className="text-gray-600">No profile visits yet</p>
+                    <p className="text-gray-600">No profile visits in the last 30 days</p>
                     <p className="text-sm text-gray-500 mt-1">
                         Start exploring creators to see your visit history here
                     </p>
@@ -389,8 +383,6 @@ export function VisitHistoryCompact({
     limit = 5,
     className = "",
 }: VisitHistoryProps) {
-    const [isInitialized, setIsInitialized] = useState(false);
-
     const [apiState, apiActions] = useFetchWithRetry<{
         success: boolean;
         data: {
@@ -400,7 +392,7 @@ export function VisitHistoryCompact({
         () => `/api/member/profile-visits?limit=${limit}`,
         {},
         {
-            maxRetries: 1, // Light retry for compact version
+            maxRetries: 1,
             retryableStatuses: [408, 429, 500, 502, 503, 504],
         }
     );
@@ -410,16 +402,12 @@ export function VisitHistoryCompact({
 
     const isRetryable = error ? ApiErrorHandler.isRetryableError(error) : false;
 
-    useEffect(() => {
-        if (!isInitialized) {
-            setIsInitialized(true);
+    const executeRef = useRef(apiActions.execute);
+    executeRef.current = apiActions.execute;
 
-            const timer = setTimeout(() => {
-                apiActions.execute();
-            }, 200);
-            return () => clearTimeout(timer);
-        }
-    }, [limit, isInitialized, apiActions]);
+    useEffect(() => {
+        executeRef.current();
+    }, [limit]);
 
     const handleRetry = () => {
         apiActions.retry();

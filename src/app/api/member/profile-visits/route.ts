@@ -5,7 +5,7 @@ import { auth } from '@clerk/nextjs/server';
 import { userRepository } from '@/lib/database/repositories/users';
 import { db } from '@/lib/database/connection';
 import { profileVisits, users } from '@/lib/database/schema';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc, and, gte, count } from 'drizzle-orm';
 import { ApiErrorHandler } from '@/lib/utils/apiErrorHandler';
 
 export async function POST(request: NextRequest) {
@@ -279,221 +279,73 @@ export async function GET(request: NextRequest) {
  } else {
  try {
 
- const recentVisits = await db
- .select({
- id: profileVisits.id,
- visitedAt: profileVisits.visitedAt,
- source: profileVisits.source,
- duration: profileVisits.duration,
- creator: {
- id: users.id,
- username: users.username,
- avatar: users.avatar
- }
- })
- .from(profileVisits)
- .innerJoin(users, eq(profileVisits.creatorId, users.id))
- .where(and(
- eq(profileVisits.userId, user.id),
- eq(users.isActive, true),
- eq(users.isSuspended, false)
- ))
- .orderBy(desc(profileVisits.visitedAt))
- .limit(limit)
- .offset(offset);
+         // Only return visits from the last 30 days
+         const thirtyDaysAgo = new Date();
+         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
- console.log(`Profile visits GET: Found ${recentVisits.length} recent visits for user ${user.id}`);
+         const whereCondition = and(
+           eq(profileVisits.userId, user.id),
+           eq(users.isActive, true),
+           eq(users.isSuspended, false),
+           gte(profileVisits.visitedAt, thirtyDaysAgo)
+         );
 
- const totalCountResult = await db
- .select()
- .from(profileVisits)
- .innerJoin(users, eq(profileVisits.creatorId, users.id))
- .where(and(
- eq(profileVisits.userId, user.id),
- eq(users.isActive, true),
- eq(users.isSuspended, false)
- ));
+         const recentVisits = await db
+           .select({
+             id: profileVisits.id,
+             visitedAt: profileVisits.visitedAt,
+             source: profileVisits.source,
+             duration: profileVisits.duration,
+             creator: {
+               id: users.id,
+               username: users.username,
+               avatar: users.avatar
+             }
+           })
+           .from(profileVisits)
+           .innerJoin(users, eq(profileVisits.creatorId, users.id))
+           .where(whereCondition)
+           .orderBy(desc(profileVisits.visitedAt))
+           .limit(limit)
+           .offset(offset);
 
- const totalCount = totalCountResult.length;
+         console.log(`Profile visits GET: Found ${recentVisits.length} recent visits for user ${user.id}`);
 
- return NextResponse.json({
- success: true,
- data: {
- visits: recentVisits.map(visit => ({
- ...visit,
- visitedAt: visit.visitedAt.toISOString()
- })),
- total: totalCount,
- limit,
- offset,
- hasMore: offset + recentVisits.length < totalCount
- }
- });
- } catch (queryError) {
- console.error('Profile visits GET: Query error:', queryError);
+         const [{ totalCount }] = await db
+           .select({ totalCount: count() })
+           .from(profileVisits)
+           .innerJoin(users, eq(profileVisits.creatorId, users.id))
+           .where(whereCondition);
 
- if (queryError instanceof Error && queryError.message.includes('does not exist')) {
- console.log('Profile visits table does not exist yet, returning empty data');
- return NextResponse.json({
- success: true,
- data: {
- visits: [],
- total: 0,
- limit,
- offset,
- hasMore: false
- }
- });
- }
+         return NextResponse.json({
+           success: true,
+           data: {
+             visits: recentVisits.map(visit => ({
+               ...visit,
+               visitedAt: visit.visitedAt.toISOString()
+             })),
+             total: totalCount,
+             limit,
+             offset,
+             hasMore: offset + recentVisits.length < totalCount
+           }
+         });
 
- throw queryError;
- }
- }
- } catch (dbError) {
- throw dbError; // Let ApiErrorHandler handle database errors
- }
- }, request, {
- endpoint: '/api/member/profile-visits',
- action: 'get-visits'
- });
-}
 
-export async function PATCH(request: NextRequest) {
- return ApiErrorHandler.withErrorHandling(async () => {
- const { userId } = await auth();
- 
- if (!userId) {
- console.warn('Profile visit duration update: Unauthorized access attempt');
- return NextResponse.json(
- { error: 'Unauthorized', message: 'Please sign in to update visit duration' },
- { status: 401 }
- );
- }
-
- let user;
- try {
- user = await userRepository.findByClerkId(userId);
- } catch (dbError) {
- console.error('Profile visit duration update: Database error finding user:', dbError);
- return NextResponse.json(
- { 
- error: 'Database error', 
- message: 'Unable to verify user account',
- retryable: true
- },
- { status: 500 }
- );
- }
-
- if (!user) {
- console.warn(`Profile visit duration update: User not found for clerkId: ${userId}`);
- return NextResponse.json(
- { error: 'User not found', message: 'Your account could not be found' },
- { status: 404 }
- );
- }
-
- let body;
- try {
- body = await request.json();
- } catch (parseError) {
- console.error('Profile visit duration update: Invalid JSON in request body:', parseError);
- return NextResponse.json(
- { error: 'Invalid request format', message: 'Request body must be valid JSON' },
- { status: 400 }
- );
- }
-
- const { visitId, duration } = body;
-
- if (!visitId) {
- return NextResponse.json(
- { error: 'Visit ID is required', message: 'Please provide a valid visit ID' },
- { status: 400 }
- );
- }
-
- if (typeof duration !== 'number' || duration < 0) {
- return NextResponse.json(
- { error: 'Invalid duration', message: 'Duration must be a non-negative number' },
- { status: 400 }
- );
- }
-
- if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(visitId)) {
- return NextResponse.json(
- { error: 'Invalid visit ID format', message: 'Visit ID must be a valid UUID' },
- { status: 400 }
- );
- }
-
- if (duration > 86400) {
- console.warn(`Profile visit duration update: Suspicious duration ${duration} seconds for visit ${visitId}`);
- return NextResponse.json(
- { error: 'Invalid duration', message: 'Duration cannot exceed 24 hours' },
- { status: 400 }
- );
- }
-
- let updatedVisit;
- try {
- const updateResult = await db
- .update(profileVisits)
- .set({ duration })
- .where(and(
- eq(profileVisits.id, visitId),
- eq(profileVisits.userId, user.id)
- ))
- .returning();
-
- updatedVisit = updateResult[0];
-
- if (!updatedVisit) {
- console.warn(`Profile visit duration update: Visit not found or unauthorized - visitId: ${visitId}, userId: ${user.id}`);
- return NextResponse.json(
- { error: 'Visit not found or unauthorized', message: 'The visit record could not be found or you do not have permission to update it' },
- { status: 404 }
- );
- }
-
- console.log(`Profile visit duration update: Successfully updated visit ${visitId} with duration ${duration}s`);
- } catch (dbError) {
- console.error('Profile visit duration update: Database update error:', dbError);
-
- if (dbError instanceof Error && (
- dbError.message.includes('connection') || 
- dbError.message.includes('timeout')
- )) {
- return NextResponse.json(
- { 
- error: 'Database connection error',
- message: 'Unable to update visit duration. Please try again.',
- retryable: true
- },
- { status: 503 }
- );
- }
-
- return NextResponse.json(
- { 
- error: 'Database error',
- message: 'Unable to update visit duration. Please try again.',
- retryable: true
- },
- { status: 500 }
- );
- }
-
- return NextResponse.json({
- success: true,
- data: {
- visitId: updatedVisit.id,
- duration: updatedVisit.duration,
- message: 'Visit duration updated successfully'
- }
- });
- }, request, {
- endpoint: '/api/member/profile-visits',
- action: 'update-duration'
- });
+    } catch (error) {
+      console.error('Profile visits GET: Error fetching recent visits:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch visit history', message: 'An error occurred while retrieving your visit history.' },
+        { status: 500 }
+      );
+    }
+  }
+  } catch (error) {
+    console.error('Profile visits GET: Unexpected error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', message: 'An unexpected error occurred.' },
+      { status: 500 }
+    );
+  }
+}, request);
 }

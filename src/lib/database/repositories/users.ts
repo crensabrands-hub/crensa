@@ -4,6 +4,32 @@ import { eq, and, ne } from 'drizzle-orm'
 import { db } from '../connection'
 import { users, creatorProfiles, memberProfiles, type User, type NewUser, type CreatorProfile, type NewCreatorProfile, type MemberProfile, type NewMemberProfile } from '../schema'
 
+// Generates a unique referral code for a new creator: CRNS + 6 uppercase alphanumeric chars
+function generateReferralCode(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  let code = 'CRNS'
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)]
+  }
+  return code
+}
+
+async function generateUniqueReferralCode(): Promise<string> {
+  let attempts = 0
+  while (attempts < 10) {
+    const code = generateReferralCode()
+    const existing = await db
+      .select({ id: creatorProfiles.id })
+      .from(creatorProfiles)
+      .where(eq(creatorProfiles.referralCode, code))
+      .limit(1)
+    if (!existing.length) return code
+    attempts++
+  }
+  // Fallback: append timestamp suffix for guaranteed uniqueness
+  return `CRNS${Date.now().toString(36).toUpperCase().slice(-6)}`
+}
+
 export interface UserWithProfile extends User {
  creatorProfile?: CreatorProfile
  memberProfile?: MemberProfile
@@ -119,11 +145,16 @@ export class UserRepository {
  }
 
  async createCreatorProfile(profileData: NewCreatorProfile): Promise<CreatorProfile> {
- const result = await db.insert(creatorProfiles).values(profileData).returning()
- if (!result || !Array.isArray(result) || result.length === 0) {
- throw new Error('Failed to create creator profile')
- }
- return result[0] as CreatorProfile
+   // Auto-generate a unique referral code for every new creator
+   const referralCode = await generateUniqueReferralCode()
+   const result = await db
+     .insert(creatorProfiles)
+     .values({ ...profileData, referralCode })
+     .returning()
+   if (!result || !Array.isArray(result) || result.length === 0) {
+     throw new Error('Failed to create creator profile')
+   }
+   return result[0] as CreatorProfile
  }
 
  async createMemberProfile(profileData: NewMemberProfile): Promise<MemberProfile> {

@@ -124,6 +124,7 @@ export function VideoPlayer({ videoId, initialData }: VideoPlayerProps) {
                         autoplay={false}
                         controls={true}
                         className="w-full max-w-4xl"
+                        videoId={video.id}
                     />
                 ) : (
                     <div

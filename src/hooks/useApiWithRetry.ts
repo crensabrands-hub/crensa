@@ -223,9 +223,13 @@ export function useFetchWithRetry<T>(
  options: RequestInit = {},
  config: ApiRetryConfig = {}
 ): [ApiState<T>, ApiActions] {
+ // Stable ref for options to avoid re-creating apiCall on every render
+ const optionsRef = useRef(options)
+ optionsRef.current = options
+
  const apiCall = useCallback(async (): Promise<T> => {
  const finalUrl = typeof url === 'function' ? url() : url
- const response = await fetch(finalUrl, options)
+ const response = await fetch(finalUrl, optionsRef.current)
  
  if (!response.ok) {
  const error = new Error(`HTTP ${response.status}: ${response.statusText}`)
@@ -235,7 +239,7 @@ export function useFetchWithRetry<T>(
  }
  
  return response.json()
- }, [url, options])
+ }, [url])
 
  return useApiWithRetry<T>(apiCall, config)
 }
