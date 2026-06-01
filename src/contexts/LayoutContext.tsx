@@ -194,17 +194,11 @@ export function LayoutProvider({ children }: { children: ReactNode }) {
  }, [state.navigation]);
 
  useEffect(() => {
- const checkStorageAvailability = () => {
+ // Check storage availability once on mount only — no need to poll
  if (!layoutPersistence.isStorageAvailable()) {
  console.warn('Browser storage is not available, layout state will not persist');
  dispatch({ type: 'SET_ERROR', payload: 'Storage unavailable - settings will not be saved' });
  }
- };
-
- checkStorageAvailability();
-
- const interval = setInterval(checkStorageAvailability, 30000);
- return () => clearInterval(interval);
  }, []);
 
  const setSidebarOpen = useCallback((open: boolean) => {

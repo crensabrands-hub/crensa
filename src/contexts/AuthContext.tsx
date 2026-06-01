@@ -109,6 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
  const fetchAttemptRef = useRef<number>(0);
  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+ const loadUserProfileRef = useRef<(forceRefresh?: boolean) => Promise<void>>(() => Promise.resolve());
 
  const cacheUserProfile = useCallback((profile: UserProfile | null) => {
  if (typeof window !== 'undefined') {
@@ -194,7 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  }, []);
 
  const loadUserProfile = useCallback(async (forceRefresh = false) => {
- if (!isLoaded || !user) {
+ if (!isLoaded || !isSignedIn || !user) {
  setAuthState(prev => ({ ...prev, isLoading: false }));
  return;
  }
@@ -237,6 +238,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
  clearTimeout(timeoutId);
 
+ // Discard result if a newer fetch has been initiated
  if (currentAttempt !== fetchAttemptRef.current) {
  return;
  }
@@ -256,7 +258,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  isOptimistic: false,
  }));
  } else if (response.status === 404) {
-
  const error = createAuthError('Profile not found', 'profile_not_found');
  setAuthState(prev => ({
  ...prev,
@@ -281,9 +282,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  } else {
  throw new Error(`HTTP ${response.status}: ${response.statusText}`);
  }
- } catch (error) {
-
- if (fetchAttemptRef.current !== fetchAttemptRef.current) {
+ } catch (error: any) {
+ // Ignore aborted requests
+ if (error?.name === 'AbortError') {
+ setAuthState(prev => ({ ...prev, isLoading: false }));
  return;
  }
 
@@ -298,41 +300,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  }));
 
  if (authError.retryable) {
+ const attempt = fetchAttemptRef.current;
  retryTimeoutRef.current = setTimeout(() => {
  loadUserProfile(forceRefresh);
- }, Math.min(1000 * Math.pow(2, fetchAttemptRef.current - 1), 10000));
+ }, Math.min(1000 * Math.pow(2, attempt - 1), 10000));
  }
  }
- }, [isLoaded, user, getCachedUserProfile, cacheUserProfile, createAuthError]);
+ }, [isLoaded, isSignedIn, user, getCachedUserProfile, cacheUserProfile, createAuthError]);
+
+ // Keep ref in sync so retry callbacks always call the latest version
+ loadUserProfileRef.current = loadUserProfile;
 
  useEffect(() => {
- if (isLoaded) {
+ if (!isLoaded) return;
+
  setAuthState(prev => ({
  ...prev,
  user: user || null,
  isSignedIn: !!isSignedIn,
- isLoading: !user && !!isSignedIn, // Only loading if signed in but no user yet
  }));
 
  if (isSignedIn && user) {
- loadUserProfile();
- } else if (!isSignedIn) {
-
+ loadUserProfileRef.current();
+ } else if (isLoaded && !isSignedIn) {
+ // Clear profile state when signed out
+ fetchAttemptRef.current = 0;
+ if (retryTimeoutRef.current) {
+ clearTimeout(retryTimeoutRef.current);
+ retryTimeoutRef.current = null;
+ }
  setAuthState(prev => ({
  ...prev,
  userProfile: null,
+ isLoading: false,
  error: null,
  lastFetch: null,
  isOptimistic: false,
  }));
  cacheUserProfile(null);
  }
- }
- }, [isLoaded, user, isSignedIn, loadUserProfile, cacheUserProfile]);
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [isLoaded, isSignedIn, user?.id]);
 
  useEffect(() => {
+ // Only persist when we have settled (non-loading) state
+ if (!authState.isLoading) {
  persistAuthState(authState);
- }, [authState, persistAuthState]);
+ }
+ }, [authState.userProfile, authState.isSignedIn, authState.lastFetch, authState.error, persistAuthState]);
 
  useEffect(() => {
  return () => {
@@ -382,7 +397,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  });
 
  if (response.ok) {
- const updatedProfile = await response.json();
+ const data = await response.json();
+ // API returns { message, user } — extract the user object
+ const updatedProfile = data.user || data;
  cacheUserProfile(updatedProfile);
  setAuthState(prev => ({
  ...prev,
@@ -413,8 +430,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  const retry = useCallback(async () => {
  setAuthState(prev => ({ ...prev, error: null, isLoading: true }));
  fetchAttemptRef.current = 0;
- await loadUserProfile(true);
- }, [loadUserProfile]);
+ await loadUserProfileRef.current(true);
+ }, []);
 
  const clearError = useCallback(() => {
  setAuthState(prev => ({ ...prev, error: null }));
