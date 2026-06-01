@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
  });
  } catch (error) {
  console.error('Creator dashboard API error:', error);
+ console.error('Error stack:', error instanceof Error ? error.stack : error);
  return NextResponse.json(
  { 
  error: 'Internal server error',

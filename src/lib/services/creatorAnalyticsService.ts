@@ -92,7 +92,19 @@ export class CreatorAnalyticsService {
  .limit(1);
 
  if (creatorProfileResult.length === 0) {
- throw new Error("Creator profile not found");
+ // Return safe defaults if profile not yet created
+ return {
+ totalCoinsEarned: 0,
+ totalEarnings: 0,
+ totalViews: 0,
+ videoCount: 0,
+ seriesCount: 0,
+ avgCoinsPerVideo: 0,
+ avgEarningsPerVideo: 0,
+ avgViewsPerVideo: 0,
+ avgWatchTimeSeconds: 0,
+ monthlyGrowth: { earnings: 0, views: 0, videos: 0, series: 0 },
+ };
  }
 
  const profile = creatorProfileResult[0];
@@ -115,7 +127,8 @@ export class CreatorAnalyticsService {
  })
  .from(watchSessions)
  .innerJoin(videos, eq(watchSessions.videoId, videos.id))
- .where(eq(videos.creatorId, creatorId)),
+ .where(eq(videos.creatorId, creatorId))
+ .catch(() => [{ avgSeconds: 0 }]),
  ]);
 
  const avgWatchTimeSeconds = Math.round(Number(avgWatchTimeResult[0]?.avgSeconds ?? 0));
@@ -205,10 +218,10 @@ export class CreatorAnalyticsService {
  const seriesGrowth = await db
  .select({
  thisMonth: sql<number>`
- COUNT(CASE WHEN ${series.createdAt} >= ${thisMonth} AND ${series.isActive} = true THEN 1 END)
+ COUNT(CASE WHEN ${series.createdAt} >= ${thisMonth} AND ${series.isActive} THEN 1 END)
  `,
  lastMonth: sql<number>`
- COUNT(CASE WHEN ${series.createdAt} >= ${lastMonth} AND ${series.createdAt} < ${thisMonth} AND ${series.isActive} = true THEN 1 END)
+ COUNT(CASE WHEN ${series.createdAt} >= ${lastMonth} AND ${series.createdAt} < ${thisMonth} AND ${series.isActive} THEN 1 END)
  `,
  })
  .from(series)
