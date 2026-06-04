@@ -54,15 +54,15 @@ export default function ProtectedRoute({
  return;
  }
 
- if (requireProfile && !userProfile) {
- if (typeof window !== 'undefined' && window.location.pathname !== '/onboarding') {
- router.push('/onboarding');
- }
- return;
- }
+ // Don't redirect missing profiles to onboarding from here — 
+ // let the dashboard pages handle it so we don't create loops
+ // if (requireProfile && !userProfile) {
+ //   router.push('/onboarding');
+ //   return;
+ // }
 
  if (!hasRequiredAccess && userProfile) {
-
+ // Wrong role — redirect to their correct dashboard
  if (userProfile?.role === 'creator') {
  router.push('/creator/dashboard');
  } else {

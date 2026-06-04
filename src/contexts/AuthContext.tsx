@@ -268,7 +268,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  }));
  
  if (typeof window !== 'undefined' && window.location.pathname !== '/onboarding') {
- window.location.href = '/onboarding';
+ // Pass the intended role from Clerk unsafeMetadata so onboarding can skip the picker
+ const intendedRole = (user?.unsafeMetadata?.role as string) || 'member';
+ window.location.href = `/onboarding?role=${intendedRole}`;
  }
  } else if (response.status === 401) {
  const error = createAuthError('Unauthorized', 'unauthorized');

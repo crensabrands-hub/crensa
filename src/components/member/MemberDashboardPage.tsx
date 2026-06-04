@@ -6,7 +6,6 @@ import { MemberStatsCards } from "./MemberStatsCards";
 import { MemberQuickActions } from "./MemberQuickActions";
 import { MemberRecentActivity } from "./MemberRecentActivity";
 import { FollowedCreatorsSection } from "./FollowedCreatorsSection";
-import { VisitHistory } from "./VisitHistory";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import CoinBalance from "@/components/wallet/CoinBalance";
 import CoinPurchaseModal from "@/components/wallet/CoinPurchaseModal";
@@ -260,13 +259,7 @@ export function MemberDashboardPage() {
  </div>
 
  {}
- <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
- {}
  <FollowedCreatorsSection />
-
- {}
- <VisitHistory limit={8} />
- </div>
 
  {}
  <CoinPurchaseModal

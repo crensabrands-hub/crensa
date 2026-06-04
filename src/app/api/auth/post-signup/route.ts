@@ -25,10 +25,24 @@ export async function GET(request: NextRequest) {
     const existingUser = await userRepository.findByClerkId(userId);
 
     if (existingUser) {
+      console.log(`Post-signup: User already exists with clerkId ${userId}, redirecting to dashboard`);
       const dashboardUrl = existingUser.role === 'creator'
         ? '/creator/dashboard'
         : '/dashboard';
       return NextResponse.redirect(new URL(dashboardUrl, request.url));
+    }
+
+    // Also check by email in case the clerkId changed but email exists
+    const emailAddress = clerkUser.emailAddresses[0]?.emailAddress;
+    if (emailAddress) {
+      const existingByEmail = await userRepository.findByEmail(emailAddress);
+      if (existingByEmail) {
+        console.log(`Post-signup: User already exists with email ${emailAddress}, redirecting to dashboard`);
+        const dashboardUrl = existingByEmail.role === 'creator'
+          ? '/creator/dashboard'
+          : '/dashboard';
+        return NextResponse.redirect(new URL(dashboardUrl, request.url));
+      }
     }
 
     const username =
@@ -46,13 +60,31 @@ export async function GET(request: NextRequest) {
       suffix++;
     }
 
-    const newUser = await userRepository.create({
-      clerkId: userId,
-      email: clerkUser.emailAddresses[0]?.emailAddress || '',
-      username: finalUsername,
-      role: role as 'creator' | 'member',
-      avatar: clerkUser.imageUrl || null,
-    });
+    let newUser;
+    try {
+      newUser = await userRepository.create({
+        clerkId: userId,
+        email: clerkUser.emailAddresses[0]?.emailAddress || '',
+        username: finalUsername,
+        role: role as 'creator' | 'member',
+        avatar: clerkUser.imageUrl || null,
+      });
+    } catch (createError: any) {
+      // Handle duplicate key errors gracefully
+      if (createError?.message?.includes('duplicate key') || createError?.cause?.code === '23505') {
+        console.error('Duplicate user detected during creation, checking existing user...');
+        // Try to find by clerkId or email one more time
+        const existing = await userRepository.findByClerkId(userId) || 
+                         await userRepository.findByEmail(clerkUser.emailAddresses[0]?.emailAddress || '');
+        
+        if (existing) {
+          const dashboardUrl = existing.role === 'creator' ? '/creator/dashboard' : '/dashboard';
+          return NextResponse.redirect(new URL(dashboardUrl, request.url));
+        }
+      }
+      // If not a duplicate or can't find existing, rethrow
+      throw createError;
+    }
 
     if (role === 'creator') {
       await userRepository.createCreatorProfile({
