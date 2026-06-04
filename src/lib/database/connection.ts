@@ -1,24 +1,18 @@
-import dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
-
 import { drizzle } from 'drizzle-orm/neon-serverless'
 import { Pool, neonConfig } from '@neondatabase/serverless'
-import ws from 'ws'
 import * as schema from './schema'
 
-// Set WebSocket constructor for server-side environments
+// In Vercel/production, Node 22+ has a native WebSocket.
+// In older Node or local dev, fall back to the 'ws' package.
 if (typeof window === 'undefined') {
-    // Node.js 22+ has built-in WebSocket. Prefer it to avoid 'ws' native module issues.
     if (typeof globalThis.WebSocket !== 'undefined') {
         neonConfig.webSocketConstructor = globalThis.WebSocket;
-    } else if (ws) {
-        neonConfig.webSocketConstructor = ws;
     } else {
-        console.warn('⚠️ No WebSocket constructor found. Database connections might fail.');
+        // Dynamic require so Next.js doesn't try to bundle 'ws' for the client
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const ws = require('ws');
+        neonConfig.webSocketConstructor = ws;
     }
-
-    // Enable connection caching for better performance and stability
-    neonConfig.fetchConnectionCache = true;
 }
 
 function getDatabaseUrl(): string {
@@ -26,7 +20,11 @@ function getDatabaseUrl(): string {
     if (!databaseUrl) {
         throw new Error('DATABASE_URL is required');
     }
-    return databaseUrl;
+    // channel_binding=require is not supported by Neon's serverless WebSocket driver
+    // Strip it to prevent connection failures in serverless environments
+    return databaseUrl.replace(/[?&]channel_binding=require/g, (match) =>
+        match.startsWith('?') ? '?' : ''
+    ).replace(/\?$/, '');
 }
 
 // Singleton pattern for database connection in Next.js development
@@ -36,12 +34,6 @@ const globalForDb = global as unknown as {
 };
 
 const connectionString = getDatabaseUrl();
-
-// Log connection attempt (masked)
-if (typeof window === 'undefined') {
-    const maskedUrl = connectionString.replace(/:[^@:]+@/, ':****@');
-    console.log(`🔌 Connecting to database: ${maskedUrl.split('@')[1] || 'URL format unexpected'}`);
-}
 
 if (!globalForDb.pool) {
     globalForDb.pool = new Pool({
