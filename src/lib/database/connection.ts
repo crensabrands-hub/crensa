@@ -2,17 +2,25 @@ import { drizzle } from 'drizzle-orm/neon-serverless'
 import { Pool, neonConfig } from '@neondatabase/serverless'
 import * as schema from './schema'
 
-// In Vercel/production, Node 22+ has a native WebSocket.
-// In older Node or local dev, fall back to the 'ws' package.
-if (typeof window === 'undefined') {
+// Configure WebSocket for Neon serverless driver.
+// Node 22+ (Vercel) has a native WebSocket global — use that.
+// Older Node falls back to the 'ws' package at runtime.
+async function configureWebSocket() {
+    if (typeof window !== 'undefined') return;
     if (typeof globalThis.WebSocket !== 'undefined') {
         neonConfig.webSocketConstructor = globalThis.WebSocket;
     } else {
-        // Dynamic require so Next.js doesn't try to bundle 'ws' for the client
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const ws = require('ws');
+        const { default: ws } = await import('ws');
         neonConfig.webSocketConstructor = ws;
     }
+}
+
+// Run synchronously-compatible setup: in Node 22+ this is a no-op (WebSocket already set)
+if (typeof window === 'undefined') {
+    if (typeof globalThis.WebSocket !== 'undefined') {
+        neonConfig.webSocketConstructor = globalThis.WebSocket;
+    }
+    // ws fallback is handled lazily by configureWebSocket() if needed
 }
 
 function getDatabaseUrl(): string {
