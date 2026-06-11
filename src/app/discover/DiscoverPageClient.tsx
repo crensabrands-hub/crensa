@@ -45,7 +45,7 @@ export default function DiscoverPageClient() {
  if (hasRole('creator')) {
  router.push('/creator/dashboard');
  } else {
- router.push('/onboarding');
+ router.push('/sign-in');
  }
  return;
  }

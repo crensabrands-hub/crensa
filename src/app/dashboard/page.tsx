@@ -2,17 +2,16 @@
 
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
 
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 
 import { MemberDashboardPage } from "@/components/member/MemberDashboardPage";
 
 function DashboardPage() {
-    const { userProfile, isLoading, hasRole } = useAuthContext();
-    const { user } = useUser();
+    const { userProfile, isLoading, hasRole, retry } = useAuthContext();
     const router = useRouter();
+    const [retryCount, setRetryCount] = useState(0);
 
     useEffect(() => {
         if (isLoading) return;
@@ -24,10 +23,15 @@ function DashboardPage() {
             return;
         }
 
-        // No profile — send to onboarding with the intended role
-        const intendedRole = (user?.unsafeMetadata?.role as string) || 'member';
-        router.push(`/onboarding?role=${intendedRole}`);
-    }, [userProfile, isLoading, hasRole, router, user]);
+        // Profile not loaded yet — retry up to 3 times before giving up
+        if (retryCount < 3) {
+            const timer = setTimeout(() => {
+                retry();
+                setRetryCount(c => c + 1);
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [userProfile, isLoading, hasRole, router, retry, retryCount]);
 
     if (isLoading || !userProfile) {
         return <LoadingScreen message="Setting up your dashboard..." variant="dashboard" />;
