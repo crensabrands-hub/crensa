@@ -1,77 +1,28 @@
-import { drizzle } from 'drizzle-orm/neon-serverless'
-import { Pool, neonConfig } from '@neondatabase/serverless'
+import { drizzle } from 'drizzle-orm/neon-http'
+import { neon } from '@neondatabase/serverless'
 import * as schema from './schema'
-
-// Configure WebSocket for Neon serverless driver.
-// Node 22+ (Vercel) has a native WebSocket global — use that.
-// Older Node falls back to the 'ws' package at runtime.
-async function configureWebSocket() {
-    if (typeof window !== 'undefined') return;
-    if (typeof globalThis.WebSocket !== 'undefined') {
-        neonConfig.webSocketConstructor = globalThis.WebSocket;
-    } else {
-        const { default: ws } = await import('ws');
-        neonConfig.webSocketConstructor = ws;
-    }
-}
-
-// Run synchronously-compatible setup: in Node 22+ this is a no-op (WebSocket already set)
-if (typeof window === 'undefined') {
-    if (typeof globalThis.WebSocket !== 'undefined') {
-        neonConfig.webSocketConstructor = globalThis.WebSocket;
-    }
-    // ws fallback is handled lazily by configureWebSocket() if needed
-}
 
 function getDatabaseUrl(): string {
     const databaseUrl = process.env.DATABASE_URL;
     if (!databaseUrl) {
         throw new Error('DATABASE_URL is required');
     }
-    // channel_binding=require is not supported by Neon's serverless WebSocket driver
-    // Strip it to prevent connection failures in serverless environments
-    return databaseUrl.replace(/[?&]channel_binding=require/g, (match) =>
-        match.startsWith('?') ? '?' : ''
-    ).replace(/\?$/, '');
+    // channel_binding=require is not supported by Neon's serverless HTTP driver — strip it
+    return databaseUrl
+        .replace(/[?&]channel_binding=require/g, (match) => match.startsWith('?') ? '?' : '')
+        .replace(/\?$/, '');
 }
-
-// Singleton pattern for database connection in Next.js development
-const globalForDb = global as unknown as {
-    pool: Pool | undefined;
-    db: ReturnType<typeof drizzle> | undefined;
-};
 
 const connectionString = getDatabaseUrl();
+const sql = neon(connectionString);
+export const db = drizzle(sql, { schema });
 
-if (!globalForDb.pool) {
-    globalForDb.pool = new Pool({
-        connectionString,
-        max: 20, // Increased max connections
-        idleTimeoutMillis: 60000, // 60s
-        connectionTimeoutMillis: 30000, // 30s
-        maxUses: 7500,
-    });
-
-    // Handle pool errors to prevent process crashes
-    globalForDb.pool.on('error', (err: Error) => {
-        console.error('Unexpected error on idle database client', err);
-        globalForDb.pool = undefined;
-        globalForDb.db = undefined;
-    });
-}
-
-if (!globalForDb.db) {
-    globalForDb.db = drizzle(globalForDb.pool, { schema });
-}
-
-export const pool = globalForDb.pool;
-export const db = globalForDb.db;
+// Pool export kept for backward compat — not used in serverless context
+export const pool = null as any;
 
 export async function testDatabaseConnection(): Promise<boolean> {
     try {
-        const client = await pool.connect();
-        await client.query('SELECT 1');
-        client.release();
+        await sql`SELECT 1`;
         return true;
     } catch (error) {
         console.error('Database connection failed:', error);
@@ -80,11 +31,7 @@ export async function testDatabaseConnection(): Promise<boolean> {
 }
 
 export async function closeDatabaseConnection(): Promise<void> {
-    if (globalForDb.pool) {
-        await globalForDb.pool.end();
-        globalForDb.pool = undefined;
-        globalForDb.db = undefined;
-    }
+    // No-op for HTTP driver — no persistent connection to close
 }
 
 export { schema }
