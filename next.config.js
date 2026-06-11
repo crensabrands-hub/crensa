@@ -6,7 +6,11 @@ const nextConfig = {
     },
 
     compiler: {
-        removeConsole: process.env.NODE_ENV === 'production',
+        // Keep console.error and console.warn in production for debugging auth/DB issues.
+        // Only strip console.log, console.debug, console.info.
+        removeConsole: process.env.NODE_ENV === 'production'
+            ? { exclude: ['error', 'warn'] }
+            : false,
     },
 
     images: {

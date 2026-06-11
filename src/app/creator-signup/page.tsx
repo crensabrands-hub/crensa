@@ -64,6 +64,7 @@ export default async function CreatorSignUpPage() {
         appearance={crensaAuthTheme}
         routing="hash"
         forceRedirectUrl={`/api/auth/post-signup?role=${role}`}
+        fallbackRedirectUrl={`/api/auth/post-signup?role=${role}`}
         signInUrl={`/sign-in?role=${role}`}
         unsafeMetadata={{ role }}
       />
