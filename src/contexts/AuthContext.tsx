@@ -267,11 +267,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  isOptimistic: false,
  }));
  
- if (typeof window !== 'undefined' && window.location.pathname !== '/onboarding') {
- // Pass the intended role from Clerk unsafeMetadata so onboarding can skip the picker
- const intendedRole = (user?.unsafeMetadata?.role as string) || 'member';
- window.location.href = `/onboarding?role=${intendedRole}`;
- }
+ // Profile not found — let the page handle this gracefully, do not redirect
  } else if (response.status === 401) {
  const error = createAuthError('Unauthorized', 'unauthorized');
  setAuthState(prev => ({
@@ -301,7 +297,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  isOptimistic: false,
  }));
 
- if (authError.retryable) {
+ if (authError.retryable && fetchAttemptRef.current <= 3) {
  const attempt = fetchAttemptRef.current;
  retryTimeoutRef.current = setTimeout(() => {
  loadUserProfile(forceRefresh);
