@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
 
-import { migrate } from 'drizzle-orm/neon-serverless/migrator'
+import { migrate } from 'drizzle-orm/neon-http/migrator'
 import { db, closeDatabaseConnection } from './connection'
 
 export async function runMigrations() {
