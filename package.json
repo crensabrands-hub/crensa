@@ -21,6 +21,8 @@
     "db:verify": "tsx scripts/verify-database-structure.ts",
     "db:backup": "tsx scripts/backup-database.ts",
     "migrate:series-refactor": "tsx scripts/apply-series-refactor-migration.ts",
+    "migrate:bunny": "tsx scripts/apply-bunny-migration.ts",
+    "migrate:cloudinary-to-bunny": "tsx scripts/migrate-cloudinary-to-bunny.ts",
     "test:series-refactor": "tsx scripts/test-series-refactor.ts",
     "lighthouse": "lighthouse http://localhost:3000 --config-path=./lighthouse.config.js --output=html --output-path=./lighthouse-report.html",
     "audit": "npm run build && npm run start & sleep 5 && npm run lighthouse && kill %1"

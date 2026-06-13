@@ -171,7 +171,7 @@ export default function VideoPlayer({
  {hasWatched ? (
  <video
  ref={videoRef}
- src={video.videoUrl}
+ src={video.videoUrl.endsWith('.m3u8') ? video.videoUrl.replace('playlist.m3u8', 'play_720p.mp4') : video.videoUrl}
  className="w-full h-full object-cover"
  playsInline
  preload="metadata"

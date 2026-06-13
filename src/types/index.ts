@@ -268,12 +268,26 @@ export interface VideoMetadata {
 }
 
 export interface CloudinaryUploadResponse {
- public_id: string;
- secure_url: string;
- duration: number;
- format: string;
- resource_type: string;
- bytes: number;
+  public_id: string;
+  secure_url: string;
+  duration: number;
+  format: string;
+  resource_type: string;
+  bytes: number;
+}
+
+/** Response shape returned by /api/videos/upload-url (Bunny Stream) */
+export interface BunnyUploadUrlResponse {
+  bunnyVideoId: string;
+  uploadUrl: string;
+  uploadHeaders: Record<string, string>;
+}
+
+/** Shape passed to /api/videos/save after a Bunny upload */
+export interface BunnyVideoSaveRequest {
+  bunnyVideoId: string;
+  metadata: VideoMetadata;
+  duration?: number;
 }
 
 export interface VideoShare {

@@ -119,25 +119,24 @@ export async function POST(request: NextRequest) {
  );
  }
 
- const result = await db.transaction(async (tx) => {
-
+ // neon-http doesn't support transactions — run sequentially
  const transactionData: NewCoinTransaction = {
  userId: user.id,
  transactionType: 'withdraw',
  coinAmount,
  rupeeAmount: rupeeAmount.toString(),
- status: 'pending', // Withdrawals start as pending for manual processing
+ status: 'pending',
  description: `Withdrawal of ${coinAmount} coins (₹${rupeeAmount.toFixed(2)}) via ${withdrawalMethod}`,
  createdAt: new Date(),
  updatedAt: new Date()
  };
 
- const [transaction] = await tx
+ const [result] = await db
  .insert(coinTransactions)
  .values(transactionData)
  .returning();
 
- await tx
+ await db
  .update(creatorProfiles)
  .set({
  coinBalance: sql`${creatorProfiles.coinBalance} - ${coinAmount}`,
@@ -145,9 +144,6 @@ export async function POST(request: NextRequest) {
  updatedAt: new Date()
  })
  .where(eq(creatorProfiles.userId, user.id));
-
- return transaction;
- });
 
  console.log('[Withdrawal] Created:', {
  withdrawalId: result.id,

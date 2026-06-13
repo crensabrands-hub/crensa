@@ -336,15 +336,11 @@ export default function VideoUpload({
         const errors = validateMetadata()
         if (errors.length > 0) {
             setValidationErrors(errors)
-            setUploadState(prev => ({
-                ...prev,
-                error: errors[0] // Show first error in main error display
-            }))
+            setUploadState(prev => ({ ...prev, error: errors[0] }))
             return
         }
 
         setValidationErrors([])
-
         setUploadState(prev => ({
             ...prev,
             isUploading: true,
@@ -354,93 +350,65 @@ export default function VideoUpload({
         }))
 
         try {
-
+            // Step 1: Create a Bunny Stream video slot and get the upload URL
             const urlResponse = await fetch('/api/videos/upload-url', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: metadata.title }),
             })
 
             if (!urlResponse.ok) {
                 const errorData = await urlResponse.json()
-                throw new Error(errorData.error || 'Failed to get upload URL')
+                throw new Error(errorData.error || 'Failed to prepare upload')
             }
 
-            const { uploadUrl, uploadParams, publicId } = await urlResponse.json()
+            const { bunnyVideoId, uploadUrl, uploadHeaders } = await urlResponse.json()
 
-            const formData = new FormData()
-            Object.keys(uploadParams).forEach(key => {
-                formData.append(key, uploadParams[key])
-            })
-            formData.append('file', uploadState.file)
-
+            // Step 2: PUT the raw file directly to Bunny Stream
             const xhr = new XMLHttpRequest()
 
             xhr.upload.addEventListener('progress', (e) => {
                 if (e.lengthComputable) {
-                    const progress = Math.round((e.loaded / e.total) * 90) // Reserve 10% for processing
+                    const progress = Math.round((e.loaded / e.total) * 90)
                     setUploadState(prev => ({ ...prev, uploadProgress: progress }))
                 }
             })
 
-            const cloudinaryUploadPromise = new Promise<any>((resolve, reject) => {
+            const bunnyUploadPromise = new Promise<void>((resolve, reject) => {
                 xhr.onload = () => {
-                    if (xhr.status === 200) {
-                        try {
-                            const result = JSON.parse(xhr.responseText)
-                            resolve(result)
-                        } catch (e) {
-                            reject(new Error('Invalid response from Cloudinary'))
-                        }
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve()
                     } else {
-                        try {
-                            const errorResponse = JSON.parse(xhr.responseText)
-                            reject(new Error(errorResponse.error?.message || `Upload failed: ${xhr.statusText}`))
-                        } catch (e) {
-                            reject(new Error(`Upload failed: ${xhr.statusText}`))
-                        }
+                        reject(new Error(`Upload failed: ${xhr.statusText} (${xhr.status})`))
                     }
                 }
-                xhr.onerror = () => reject(new Error('Network error during upload'))
+                xhr.onerror   = () => reject(new Error('Network error during upload'))
                 xhr.ontimeout = () => reject(new Error('Upload timeout - please try with a smaller file'))
             })
 
-            xhr.open('POST', uploadUrl)
-            xhr.timeout = 300000 // 5 minutes timeout
-            xhr.send(formData)
+            xhr.open('PUT', uploadUrl)
+            xhr.timeout = 600000 // 10 minutes for large files
+            // Set Bunny auth headers
+            Object.entries(uploadHeaders as Record<string, string>).forEach(([k, v]) => {
+                xhr.setRequestHeader(k, v)
+            })
+            xhr.send(uploadState.file)
 
-            const cloudinaryResult = await cloudinaryUploadPromise
+            await bunnyUploadPromise
 
-            setUploadState(prev => ({
-                ...prev,
-                uploadProgress: 90,
-                isProcessing: true
-            }))
+            setUploadState(prev => ({ ...prev, uploadProgress: 90, isProcessing: true }))
 
-            const metadataToSend = {
-                ...metadata,
-                coinPrice: metadata.coinPrice,
-                creditCost: metadata.coinPrice / 20 // Convert coins to credits for backward compatibility
-            }
-
-            console.log('=== UPLOAD DEBUG ===')
-            console.log('Original metadata:', metadata)
-            console.log('Metadata to send:', metadataToSend)
-            console.log('Has seriesId?', !!metadata.seriesId)
-            console.log('CoinPrice being sent:', metadataToSend.coinPrice)
-            console.log('==================')
-
+            // Step 3: Save video metadata to our database
             const saveResponse = await fetch('/api/videos/save', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    publicId,
-                    metadata: metadataToSend,
-                    cloudinaryResult
-                })
+                    bunnyVideoId,
+                    metadata: {
+                        ...metadata,
+                        creditCost: metadata.coinPrice / 20,
+                    },
+                }),
             })
 
             if (!saveResponse.ok) {
@@ -451,30 +419,12 @@ export default function VideoUpload({
             const result = await saveResponse.json()
 
             setUploadState(prev => ({ ...prev, uploadProgress: 100 }))
-
             await new Promise(resolve => setTimeout(resolve, 500))
 
-            setUploadState({
-                file: null,
-                uploadProgress: 0,
-                isProcessing: false,
-                error: null,
-                isUploading: false
-            })
+            setUploadState({ file: null, uploadProgress: 0, isProcessing: false, error: null, isUploading: false })
+            setMetadata({ title: '', description: '', category: '', tags: [], creditCost: 1, coinPrice: 20, aspectRatio: '16:9' })
 
-            setMetadata({
-                title: '',
-                description: '',
-                category: '',
-                tags: [],
-                creditCost: 1,
-                coinPrice: 20,
-                aspectRatio: '16:9'
-            })
-
-            if (fileInputRef.current) {
-                fileInputRef.current.value = ''
-            }
+            if (fileInputRef.current) fileInputRef.current.value = ''
 
             onUploadComplete(result.video)
 

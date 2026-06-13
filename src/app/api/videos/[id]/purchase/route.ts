@@ -101,9 +101,8 @@ export async function POST(
  }
 
  let newBalance: number = 0;
- 
- await db.transaction(async (tx) => {
 
+ // neon-http doesn't support transactions — run sequentially
  const coinResult = await coinTransactionService.createCoinTransaction({
  userId: user.id,
  transactionType: "spend",
@@ -119,7 +118,7 @@ export async function POST(
 
  newBalance = coinResult.newBalance || 0;
 
- await tx.insert(transactions).values({
+ await db.insert(transactions).values({
  userId: user.id,
  type: "video_view",
  amount: coinPrice.toString(),
@@ -133,7 +132,7 @@ export async function POST(
  },
  });
 
- await tx
+ await db
  .update(videos)
  .set({
  viewCount: sql`${videos.viewCount} + 1`,
@@ -148,7 +147,6 @@ export async function POST(
  videoId,
  `Earned from video purchase: ${video.title}`
  );
- });
 
  return NextResponse.json({
  success: true,

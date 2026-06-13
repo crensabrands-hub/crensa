@@ -181,6 +181,8 @@ export const videos = pgTable(
         aspectRatio: varchar("aspect_ratio", { length: 10 }).default("16:9").notNull()
             .$type<"1:1" | "16:9" | "9:16" | "2:3" | "3:2" | "4:5" | "5:4">(),
         seriesId: uuid("series_id").references(() => series.id, { onDelete: "set null" }),
+        // Bunny Stream video GUID — null for legacy Cloudinary videos
+        bunnyVideoId: varchar("bunny_video_id", { length: 255 }),
         createdAt: timestamp("created_at").defaultNow().notNull(),
         updatedAt: timestamp("updated_at").defaultNow().notNull(),
     },

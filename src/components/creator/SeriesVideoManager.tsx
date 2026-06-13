@@ -647,28 +647,33 @@ function VideoUploadForm({
     setUploadProgress(0);
 
     try {
-      // Step 1: Get upload URL
-      const urlResponse = await fetch("/api/videos/upload-url", { method: "POST" });
-      if (!urlResponse.ok) throw new Error("Failed to get upload URL");
+      // Step 1: Create Bunny Stream video slot
+      const urlResponse = await fetch("/api/videos/upload-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title }),
+      });
+      if (!urlResponse.ok) throw new Error("Failed to prepare upload");
 
-      const { uploadUrl, uploadParams, publicId } = await urlResponse.json();
+      const { bunnyVideoId, uploadUrl, uploadHeaders } = await urlResponse.json();
 
-      // Step 2: Upload to Cloudinary
-      const formData = new FormData();
-      Object.keys(uploadParams).forEach((key) => formData.append(key, uploadParams[key]));
-      formData.append("file", file);
-
+      // Step 2: PUT file directly to Bunny Stream
       const xhr = new XMLHttpRequest();
       xhr.upload.addEventListener("progress", (e) => {
         if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 90));
       });
 
-      const cloudinaryResult = await new Promise<any>((resolve, reject) => {
+      await new Promise<void>((resolve, reject) => {
         xhr.onload = () =>
-          xhr.status === 200 ? resolve(JSON.parse(xhr.responseText)) : reject(new Error("Upload failed"));
-        xhr.onerror = () => reject(new Error("Network error"));
-        xhr.open("POST", uploadUrl);
-        xhr.send(formData);
+          xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Upload failed (${xhr.status})`));
+        xhr.onerror   = () => reject(new Error("Network error"));
+        xhr.ontimeout = () => reject(new Error("Upload timeout"));
+        xhr.open("PUT", uploadUrl);
+        xhr.timeout = 600000;
+        Object.entries(uploadHeaders as Record<string, string>).forEach(([k, v]) =>
+          xhr.setRequestHeader(k, v)
+        );
+        xhr.send(file);
       });
 
       setUploadProgress(90);
@@ -678,9 +683,8 @@ function VideoUploadForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          publicId,
+          bunnyVideoId,
           metadata: { title, description, category, coinPrice: finalCoinPrice, tags: [], aspectRatio: "16:9", seriesId },
-          cloudinaryResult,
         }),
       });
 

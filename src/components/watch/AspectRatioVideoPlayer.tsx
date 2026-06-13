@@ -73,6 +73,15 @@ export const AspectRatioVideoPlayer: React.FC<AspectRatioVideoPlayerProps> = ({
  const watchStartRef = useRef<number | null>(null);
  const accumulatedRef = useRef<number>(0);
 
+ /**
+  * Browsers don't support HLS (.m3u8) natively (except Safari).
+  * Bunny Stream also provides a direct MP4 URL at the same CDN path.
+  * Swap playlist.m3u8 → play_720p.mp4 so every browser can play it.
+  */
+ const resolvedVideoUrl = videoUrl.endsWith('.m3u8')
+   ? videoUrl.replace('playlist.m3u8', 'play_720p.mp4')
+   : videoUrl;
+
  // Fire a watch session record to the API — non-blocking, best-effort
  const recordSession = React.useCallback((durationSeconds: number, completed: boolean) => {
    if (!videoId || durationSeconds < 1) return;
@@ -294,7 +303,7 @@ export const AspectRatioVideoPlayer: React.FC<AspectRatioVideoPlayerProps> = ({
  preload="metadata"
  onClick={togglePlayPause}
  >
- <source src={videoUrl} type="video/mp4" />
+ <source src={resolvedVideoUrl} type="video/mp4" />
  Your browser does not support the video tag.
  </video>
 

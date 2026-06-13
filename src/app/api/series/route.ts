@@ -2,19 +2,13 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { v2 as cloudinary } from "cloudinary";
 import { userRepository } from "@/lib/database/repositories/users";
 import { db } from "@/lib/database";
 import { series, users, creatorProfiles } from "@/lib/database";
 import { eq, desc, asc, and, count, sql } from "drizzle-orm";
 import type { NewSeries, SeriesWithRelations } from "@/types/database";
 import { CacheService } from "@/lib/services/cacheService";
-
-cloudinary.config({
- cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
- api_key: process.env.CLOUDINARY_API_KEY,
- api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import { uploadThumbnailToBunny, buildSeriesThumbnailPath } from "@/lib/services/bunnyService";
 
 interface SeriesCreateRequest {
  title: string;
@@ -158,25 +152,13 @@ export async function POST(request: NextRequest) {
  const thumbnail = requestData.thumbnail;
  if (thumbnail && thumbnail instanceof File) {
  try {
-
  const arrayBuffer = await thumbnail.arrayBuffer();
  const buffer = Buffer.from(arrayBuffer);
- const base64 = buffer.toString("base64");
- const dataURI = `data:${thumbnail.type};base64,${base64}`;
-
- const uploadResult = await cloudinary.uploader.upload(dataURI, {
- folder: "crensa/series/thumbnails",
- resource_type: "image",
- transformation: [
- { width: 1280, height: 720, crop: "fill" },
- { quality: "auto:good" },
- ],
- });
-
- (requestData as any).thumbnailUrl = uploadResult.secure_url;
+ const storagePath = buildSeriesThumbnailPath(user.id);
+ const uploaded = await uploadThumbnailToBunny(storagePath, buffer, thumbnail.type || "image/jpeg");
+ (requestData as any).thumbnailUrl = uploaded.thumbnailUrl;
  } catch (uploadError) {
- console.error("Cloudinary upload error:", uploadError);
-
+ console.error("Bunny Storage thumbnail upload error:", uploadError);
  (requestData as any).thumbnailUrl = null;
  }
  }

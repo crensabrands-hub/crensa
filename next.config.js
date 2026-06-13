@@ -29,6 +29,24 @@ const nextConfig = {
             },
             {
                 protocol: "https",
+                hostname: "*.b-cdn.net",
+                port: "",
+                pathname: "/**",
+            },
+            {
+                protocol: "https",
+                hostname: "vz-b76ee301-edf.b-cdn.net",
+                port: "",
+                pathname: "/**",
+            },
+            {
+                protocol: "https",
+                hostname: "crensa-thumbnails.b-cdn.net",
+                port: "",
+                pathname: "/**",
+            },
+            {
+                protocol: "https",
                 hostname: "api.qrserver.com",
                 port: "",
                 pathname: "/**",

@@ -209,8 +209,7 @@ export async function POST(
 
  let newBalance: number = 0;
 
- await db.transaction(async (tx) => {
-
+ // neon-http doesn't support transactions — run sequentially
  const coinResult = await coinTransactionService.createCoinTransaction({
  userId: user.id,
  transactionType: "spend",
@@ -229,7 +228,7 @@ export async function POST(
  await seriesPurchasesRepository.create({
  seriesId,
  userId: user.id,
- purchasePrice: (adjustedPrice / 20).toFixed(2), // Convert coins to rupees for legacy field
+ purchasePrice: (adjustedPrice / 20).toFixed(2),
  status: "completed",
  metadata: {
  type: "coin_payment",
@@ -246,7 +245,7 @@ export async function POST(
  },
  });
 
- await tx
+ await db
  .update(series)
  .set({
  viewCount: sql`${series.viewCount} + 1`,
@@ -261,7 +260,6 @@ export async function POST(
  seriesId,
  `Earned from series purchase: ${seriesData.title}`
  );
- });
 
  console.log('[SeriesPurchase] Series purchased successfully:', {
  userId: user.id,
